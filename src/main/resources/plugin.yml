@@ -1,0 +1,17 @@
+name: SpeedrunStats
+version: '${project.version}'
+main: dev.osowiz.speedrunstats.SpeedrunStats
+api-version: '1.20'
+load: STARTUP
+authors: [OsoWiz]
+description: Plugin for speedrunning in teams
+
+commands:
+  start:
+    description: Start a speedrun
+    usage: /<command> <category>
+  points:
+    description: Tells the number of points you have
+    usage: /<command>
+    aliases: [score, getpoints, getscore]
+
