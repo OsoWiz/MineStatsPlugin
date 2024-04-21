@@ -1,19 +1,39 @@
 package dev.osowiz.speedrunstats.util;
 
+import org.bukkit.Bukkit;
 import org.bukkit.Material;
+import org.bukkit.Server;
 import org.bukkit.enchantments.Enchantment;
+import org.bukkit.inventory.ItemFactory;
 import org.bukkit.inventory.ItemStack;
-import org.bukkit.inventory.meta.ItemMeta;
-import org.bukkit.inventory.meta.PotionMeta;
+import org.bukkit.inventory.meta.*;
+import org.bukkit.potion.PotionEffect;
+import org.bukkit.potion.PotionEffectType;
+import org.bukkit.potion.PotionType;
 
 import java.util.Random;
 
 public enum LootTableEntry {
-
+    // standard barter loot
     StandardEnchantedBook(Material.ENCHANTED_BOOK, 5, 1, 1, Enchantment.SOUL_SPEED),
     StandardIronBoots(Material.IRON_BOOTS, 8, 1, 1, Enchantment.SOUL_SPEED),
     StandardIronNugget(Material.IRON_NUGGET, 10, 9, 36),
-    StandardSplashPotion(Material.SPLASH_POTION, 10, 1 ,1, );
+    StandardFireResSplashPotion(Material.SPLASH_POTION, 10, 1 ,1, PotionType.FIRE_RESISTANCE),
+    StandardFireResPotion(Material.POTION, 10, 1 ,1, PotionType.FIRE_RESISTANCE),
+    StandardQuartz(Material.QUARTZ, 20, 8, 16),
+    StandardGlowStone(Material.GLOWSTONE_DUST, 20, 5, 12),
+    StandardMagmaCream(Material.MAGMA_CREAM, 20, 2, 6),
+    StandardEnderPearl(Material.ENDER_PEARL, 20, 4, 8),
+    StandardString(Material.STRING, 20, 8, 24),
+    StandardFireCharge(Material.FIRE_CHARGE, 40, 1, 5),
+    StandardGravel(Material.GRAVEL, 40, 8, 16),
+    StandardLeather(Material.LEATHER, 40, 4, 10),
+    StandardNetherBrick(Material.NETHER_BRICK, 40, 4, 16),
+    StandardObsidian(Material.OBSIDIAN, 40, 1, 1),
+    StandardCryingObsidian(Material.CRYING_OBSIDIAN, 40, 1, 3),
+    StandardSoulSand(Material.SOUL_SAND, 40, 4, 16);
+    // custom barter loot
+
 
     private Material item;
     private int weight;
@@ -55,28 +75,25 @@ public enum LootTableEntry {
     }
 
     LootTableEntry(Material item, int weight, int minDrop, int maxDrop){
-        this.item = item;
-        this.weight = weight;
-        this.minDrop = minDrop;
-        this.maxDrop = maxDrop;
-        this.enchantment = null;
-        this.metaData = null;
+        setItemStackData(item, weight, minDrop, maxDrop);
     }
 
-    LootTableEntry(Material item, int weight, int minDrop, int maxDrop, ItemMeta metaData){
-        this.item = item;
-        this.weight = weight;
-        this.minDrop = minDrop;
-        this.maxDrop = maxDrop;
+    LootTableEntry(Material item, int weight, int minDrop, int maxDrop, PotionType potionType){
+        setItemStackData(item, weight, minDrop, maxDrop);
         this.enchantment = null;
-        this.metaData = metaData;
+        Server server = Bukkit.getServer();
+        ItemFactory factory = server.getItemFactory();
+        PotionMeta potionMeta = (PotionMeta) factory.getItemMeta(item);
+        if(potionMeta == null)
+        {
+            throw new IllegalArgumentException("Item is not a potion");
+        }
+        potionMeta.setBasePotionType(potionType);
+        this.metaData = potionMeta;
     }
 
     LootTableEntry(Material item, int weight, int minDrop, int maxDrop, Enchantment enchantment){
-        this.item = item;
-        this.weight = weight;
-        this.minDrop = minDrop;
-        this.maxDrop = maxDrop;
+        setItemStackData(item, weight, minDrop, maxDrop);
         this.enchantment = enchantment;
     }
 
@@ -109,7 +126,28 @@ public enum LootTableEntry {
             int minLevel = enchantment.getStartLevel();
             stack.addEnchantment(enchantment, rand.nextInt(maxLevel) + minLevel );
         }
+        if(this.metaData != null)
+        {
+            stack.setItemMeta(metaData);
+        }
+
         return stack;
+    }
+
+    // private methods
+
+    /**
+     * Sets the itemStack data.
+     * @param item
+     * @param weight
+     * @param minDrop
+     * @param maxDrop
+     */
+    private void setItemStackData(Material item, int weight, int minDrop, int maxDrop){
+        this.item = item;
+        this.weight = weight;
+        this.minDrop = minDrop;
+        this.maxDrop = maxDrop;
     }
 
 }

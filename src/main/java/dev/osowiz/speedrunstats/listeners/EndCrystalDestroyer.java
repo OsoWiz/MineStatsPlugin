@@ -15,9 +15,10 @@ import java.util.stream.Collectors;
 
 public class EndCrystalDestroyer extends SpeedrunListenerBase {
 
+    public static final String name = "EndCrystalDestroyer";
 
     public EndCrystalDestroyer(SpeedrunStats plugin) {
-        super(plugin, "EndCrystalDestroyer");
+        super(plugin, name);
     }
 
     @EventHandler

@@ -34,6 +34,15 @@ public abstract class Game {
     }
 
     /**
+     * Unregisters a listener from this game.
+     * @param listenerName to unregister
+     */
+    public void unregisterListener(String listenerName)
+    {
+        this.listeners.stream().filter(listener -> listener.name.equals(listenerName)).forEach(SpeedrunListenerBase::unregister);
+    }
+
+    /**
      * Sets the configuration for the game.
      * @param config configuration for the game.
      */
@@ -58,7 +67,7 @@ public abstract class Game {
     }
 
     public boolean isTeamGame(){
-        return 0 < teams.size();
+        return !teams.isEmpty();
     }
 
     public double getCooldownTime(){

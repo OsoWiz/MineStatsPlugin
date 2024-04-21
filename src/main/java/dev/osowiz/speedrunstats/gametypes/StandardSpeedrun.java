@@ -1,8 +1,7 @@
 package dev.osowiz.speedrunstats.gametypes;
 
 import dev.osowiz.speedrunstats.SpeedrunStats;
-import dev.osowiz.speedrunstats.listeners.PlayerJoinListener;
-import dev.osowiz.speedrunstats.listeners.StandardAdvancementListener;
+import dev.osowiz.speedrunstats.listeners.*;
 import dev.osowiz.speedrunstats.util.*;
 import org.bson.Document;
 import org.bukkit.configuration.Configuration;
@@ -23,8 +22,12 @@ public class StandardSpeedrun extends Game {
         this.leaderObjectiveID = 0;
         this.listeners.add(new PlayerJoinListener(plugin, true));
         this.listeners.add(new StandardAdvancementListener(plugin, this));
+        this.listeners.add(new StandardCatchupListener(plugin, this));
+        this.listeners.add(new StandardKillDeathListener(plugin, this));
+        this.listeners.add(new EndCrystalDestroyer(plugin));
+        this.listeners.add(new PiglinbruteSpawnPreventer(plugin));
         // register all listeners
-        listeners.forEach(listener -> listener.register());
+        listeners.forEach(SpeedrunListenerBase::register);
     }
 
     @Override

@@ -8,37 +8,51 @@ import org.bukkit.inventory.ItemFlag;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.loot.LootContext;
 import org.bukkit.loot.LootTable;
+import org.jetbrains.annotations.NotNull;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Random;
 
 public class StandardPiglinLootTable implements LootTable {
 
-    private final Pair<Material, Integer>[] standardItemList = new Pair[]{
-        Pair.pair(Material.ENCHANTED_BOOK., 1)
+
+    private final LootTableItemList itemList;
+    private final LootTableEntry[] entries = {
+            LootTableEntry.StandardEnchantedBook,
+            LootTableEntry.StandardIronBoots,
+            LootTableEntry.StandardIronNugget,
+            LootTableEntry.StandardFireResSplashPotion,
+            LootTableEntry.StandardFireResPotion,
+            LootTableEntry.StandardQuartz,
+            LootTableEntry.StandardGlowStone,
+            LootTableEntry.StandardMagmaCream,
+            LootTableEntry.StandardEnderPearl,
+            LootTableEntry.StandardString,
+            LootTableEntry.StandardFireCharge,
+            LootTableEntry.StandardGravel,
+            LootTableEntry.StandardLeather,
+            LootTableEntry.StandardNetherBrick,
+            LootTableEntry.StandardObsidian,
+            LootTableEntry.StandardCryingObsidian,
+            LootTableEntry.StandardSoulSand
     };
 
+    public StandardPiglinLootTable(){
+        itemList = new LootTableItemList(Arrays.asList(entries));
+    }
+
     @Override
-    public Collection<ItemStack> populateLoot(Random random, LootContext context) {
+    public @NotNull Collection<ItemStack> populateLoot(Random random, @NotNull LootContext context) {
         ArrayList<ItemStack> items = new ArrayList<>();
-        int min = 1; int max = 2;
-        Material itemMaterial = Material.OAK_LOG;
-
-
-        if(rand < 0.018)
-        {
-            
-        } else if (false) {
-            
-        }
-
-        items.add(new ItemStack(Material.GOLD_NUGGET, 1));
+        LootTableEntry entry = this.itemList.getRandomEntry(random);
+        items.add(entry.getItemStack(random));
         return items;
     }
 
     @Override
-    public void fillInventory(Inventory inventory, Random random, LootContext context) {
+    public void fillInventory(@NotNull Inventory inventory, Random random, @NotNull LootContext context) {
         return;
     }
 

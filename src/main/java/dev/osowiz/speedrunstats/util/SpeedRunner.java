@@ -60,8 +60,15 @@ public class SpeedRunner {
      * @param res advancementresult done
      */
     public void advancementDone(AdvancementResult res) {
-
-
+        stats.addPoints(res.getPoints());
+        if(-1 < res.getAdvancementLevel() && stats.currentObjectiveID < res.getAdvancementLevel())
+        {
+            for(int i = stats.currentObjectiveID; i < res.getAdvancementLevel(); i++)
+            {
+                stats.addPoints(StandardSpeedrunScoring.corePoints[i]);
+            }
+            stats.currentObjectiveID = res.getAdvancementLevel();
+        }
     }
 
     /**

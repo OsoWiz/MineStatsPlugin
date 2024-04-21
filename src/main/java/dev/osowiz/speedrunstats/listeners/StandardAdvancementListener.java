@@ -11,9 +11,10 @@ import org.bukkit.plugin.Plugin;
 
 public class StandardAdvancementListener extends SpeedrunListenerBase {
 
-    private StandardSpeedrun game;
+    private final StandardSpeedrun game;
+    public static final String name = "StandardAdvancementListener";
     public StandardAdvancementListener(Plugin plugin, StandardSpeedrun speedrunGame) {
-        super(plugin, "StandardAdvancementListener");
+        super(plugin, name);
         this.game = speedrunGame;
     }
 

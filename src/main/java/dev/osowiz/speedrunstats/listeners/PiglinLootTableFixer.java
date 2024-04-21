@@ -10,8 +10,9 @@ import java.util.List;
 
 public class PiglinLootTableFixer extends SpeedrunListenerBase{
 
+    public static final String name = "PiglinLootTableFixer";
     public PiglinLootTableFixer(SpeedrunStats plugin) {
-        super(plugin, "PiglinLootTableFixer");
+        super(plugin, name);
     }
 
     @EventHandler

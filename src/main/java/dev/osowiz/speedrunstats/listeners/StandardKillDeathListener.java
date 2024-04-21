@@ -12,8 +12,9 @@ import org.bukkit.event.entity.PlayerDeathEvent;
 public class StandardKillDeathListener extends SpeedrunListenerBase {
 
     StandardSpeedrun game;
-    StandardKillDeathListener(SpeedrunStats plugin, StandardSpeedrun game) {
-        super(plugin, "StandardKillDeathListener");
+    public static final String name = "StandardKillDeathListener";
+    public StandardKillDeathListener(SpeedrunStats plugin, StandardSpeedrun game) {
+        super(plugin, name);
         this.game = game;
     }
 

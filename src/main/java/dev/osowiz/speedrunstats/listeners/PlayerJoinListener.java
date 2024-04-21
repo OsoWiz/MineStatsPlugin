@@ -18,9 +18,9 @@ public class PlayerJoinListener extends SpeedrunListenerBase {
     boolean canJoin = true;
     boolean preventMovement;
     Function<Player, Void> playerAddFunction;
-
+    public static final String name = "PlayerJoinListener";
     public PlayerJoinListener(SpeedrunStats plugin, boolean preventMovement) {
-        super(plugin, "PlayerJoinListener");
+        super(plugin, name);
         playerAddFunction = (player) -> {
             plugin.addPlayerToGame(player);
             return null;
