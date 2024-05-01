@@ -105,7 +105,7 @@ public enum LootTableEntry {
      */
     public ItemStack getItemStack(Random rand, Enchantment enchantment)
     {
-        ItemStack stack = new ItemStack(item, rand.nextInt(maxDrop - minDrop) + minDrop);
+        ItemStack stack = new ItemStack(item, getRandomAmount(rand));
         int maxLevel = enchantment.getMaxLevel();
         int minLevel = enchantment.getStartLevel();
         stack.addEnchantment(enchantment, rand.nextInt(maxLevel) + minLevel );
@@ -119,7 +119,7 @@ public enum LootTableEntry {
      */
     public ItemStack getItemStack(Random rand)
     {
-        ItemStack stack = new ItemStack(item, rand.nextInt(maxDrop - minDrop) + minDrop);
+        ItemStack stack = new ItemStack(item, getRandomAmount(rand));
         if(this.enchantment != null)
         {
             int maxLevel = enchantment.getMaxLevel();
@@ -148,6 +148,11 @@ public enum LootTableEntry {
         this.weight = weight;
         this.minDrop = minDrop;
         this.maxDrop = maxDrop;
+    }
+
+    private int getRandomAmount(Random rand)
+    {
+        return rand.nextInt(maxDrop - minDrop + 1) + minDrop;
     }
 
 }

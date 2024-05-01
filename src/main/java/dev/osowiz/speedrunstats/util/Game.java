@@ -3,6 +3,7 @@ package dev.osowiz.speedrunstats.util;
 import dev.osowiz.speedrunstats.SpeedrunStats;
 import dev.osowiz.speedrunstats.listeners.SpeedrunListenerBase;
 import org.bukkit.entity.Player;
+import org.bukkit.scoreboard.*;
 
 import java.util.ArrayList;
 import java.util.Date;
@@ -19,18 +20,28 @@ public abstract class Game {
     protected ArrayList<SpeedrunListenerBase> listeners = new ArrayList<SpeedrunListenerBase>();
 
     protected SpeedrunConfig config;
+    Scoreboard defaultScoreBoard; // scoreboard to show when player joins the server
 
     public boolean isOn = false;
 
     // public methods
 
-    public SpeedRunner getRunnerByName(String nameToSearch){
+    public SpeedRunner getRunnerByName(String nameToSearch) {
         for(SpeedRunner runner : runners) {
             if(runner.name.equals(nameToSearch)){
                 return runner;
             }
         }
         return null;
+    }
+
+    public void initScoreboard(){
+        defaultScoreBoard = plugin.getServer().getScoreboardManager().getNewScoreboard();
+        Objective newObj = defaultScoreBoard.registerNewObjective("speedrun", "dummy", "Speedrun", RenderType.INTEGER);
+        newObj.setDisplaySlot(DisplaySlot.SIDEBAR);
+        newObj.setDisplayName( "Welcome to  " + gameDate.toString());
+        Score numPlayers = newObj.getScore("Players: ");
+        numPlayers.setScore(runners.size());
     }
 
     /**
@@ -53,7 +64,7 @@ public abstract class Game {
     /**
      * Adds a player to the game.
      */
-    public void addRunner(SpeedRunner runner){
+    public void addRunner(SpeedRunner runner) {
         runners.add(runner);
     }
 

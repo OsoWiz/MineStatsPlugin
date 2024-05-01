@@ -41,20 +41,22 @@ public class SpeedrunTeam {
 
     public boolean advancementDone(AdvancementResult res)
     {
+        int score = res.getPoints();
         if(currentObjectiveID <= res.getAdvancementLevel())
         {
-            int score = res.getPoints();
             // get the previous scores if any
             for(int i = currentObjectiveID; i < res.getAdvancementLevel(); i++)
             {
                 score += StandardSpeedrunScoring.corePoints[i];
             }
-            currentObjectiveID = res.getAdvancementLevel();
-            for(SpeedRunner runner : runners)
-            {
-                runner.stats.addPoints(score);
-            }
+            currentObjectiveID = res.getAdvancementLevel() + 1;
+
             return true;
+        }
+        for(SpeedRunner runner : runners)
+        {
+            runner.stats.addPoints(score);
+            runner.stats.currentObjectiveID = currentObjectiveID;
         }
         return false;
     }

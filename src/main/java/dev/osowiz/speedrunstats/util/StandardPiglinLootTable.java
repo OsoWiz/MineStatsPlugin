@@ -1,6 +1,5 @@
 package dev.osowiz.speedrunstats.util;
 
-import jdk.internal.net.http.common.Pair;
 import org.bukkit.Material;
 import org.bukkit.NamespacedKey;
 import org.bukkit.inventory.Inventory;

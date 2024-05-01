@@ -26,23 +26,15 @@ public class StandardAdvancementListener extends SpeedrunListenerBase {
         }
         String advancementKey = event.getAdvancement().getKey().getKey();
         AdvancementResult res = StandardSpeedrunScoring.getScoreForAdvancement(advancementKey);
-        // check if the advancement is not a core advancement
-        if(res.getAdvancementLevel() < 0)
-        { // non core
-            runner.stats.addPoints(res.getPoints());
-            runner.spigotPlayer.sendMessage("You have gained " + res.getPoints() + " points for " + event.getAdvancement().toString());
-            return;
+        SpeedrunTeam team = null;
+        if(game.isTeamGame())
+        {   // team advancement
+            team = game.getTeamByID(runner.teamID);
+            team.advancementDone(res);
         }
-        // core advancement
-        if(runner.teamID < 0)
-        { // single player
+        else {
             runner.advancementDone(res);
         }
-
-        // otherwise, this is a team advancement.
-        SpeedrunTeam team = game.getTeamByID(runner.teamID);
-
-        team.advancementDone(res);
 
         if(res.getAdvancementLevel() == StandardSpeedrunScoring.finalMission)
         {
@@ -53,8 +45,10 @@ public class StandardAdvancementListener extends SpeedrunListenerBase {
                 team.getRunners().forEach(teamRunner -> {
                     teamRunner.time = elapsedTimeInSeconds;
                 });
+                plugin.getServer().broadcastMessage("Team " + team.teamID + " has finished the game in " + elapsedTimeInSeconds + " seconds!");
             } else {
                 runner.time = elapsedTimeInSeconds;
+                plugin.getServer().broadcastMessage(runner.name + " has finished the game in " + elapsedTimeInSeconds + " seconds!");
             }
             game.endGame();
             this.unregister(); // no more advancements points

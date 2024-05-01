@@ -36,13 +36,11 @@ public class PlayerJoinListener extends SpeedrunListenerBase {
         }
         event.getPlayer().sendMessage("Welcome to the server!");
         Player player = event.getPlayer();
-        event.getPlayer().sendMessage("Your walk speed is: " + player.getWalkSpeed());
         if(preventMovement)
         {
             player.setAllowFlight(true);
             player.setFlying(true);
             player.setFlySpeed(0.f);
-            player.setWalkSpeed(0.f); // prevent movement
         }
 
         playerAddFunction.apply(player);

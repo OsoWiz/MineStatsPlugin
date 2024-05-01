@@ -59,16 +59,18 @@ public class SpeedRunner {
      * Called when the player has made an advancement in a single player game.
      * @param res advancementresult done
      */
-    public void advancementDone(AdvancementResult res) {
+    public boolean advancementDone(AdvancementResult res) {
         stats.addPoints(res.getPoints());
-        if(-1 < res.getAdvancementLevel() && stats.currentObjectiveID < res.getAdvancementLevel())
+        if(-1 < res.getAdvancementLevel() && stats.currentObjectiveID <= res.getAdvancementLevel())
         {
             for(int i = stats.currentObjectiveID; i < res.getAdvancementLevel(); i++)
             {
                 stats.addPoints(StandardSpeedrunScoring.corePoints[i]);
             }
-            stats.currentObjectiveID = res.getAdvancementLevel();
+            stats.currentObjectiveID = res.getAdvancementLevel() + 1;
+            return true;
         }
+        return false;
     }
 
     /**

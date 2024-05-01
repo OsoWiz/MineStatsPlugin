@@ -26,8 +26,16 @@ public class StandardSpeedrun extends Game {
         this.listeners.add(new StandardKillDeathListener(plugin, this));
         this.listeners.add(new EndCrystalDestroyer(plugin));
         this.listeners.add(new PiglinbruteSpawnPreventer(plugin));
+        this.listeners.add(new PiglinLootTableFixer(plugin, config.lootTable));
+        this.listeners.add(new PlayerQuitListener(plugin));
+        this.listeners.add(new BlockBreakPreventer(plugin));
         // register all listeners
         listeners.forEach(SpeedrunListenerBase::register);
+
+        // prevent pvp in all worlds at start
+        this.plugin.getServer().getWorlds().forEach(world -> {
+            world.setPVP(false);
+        });
     }
 
     @Override
@@ -50,9 +58,12 @@ public class StandardSpeedrun extends Game {
                 runners.forEach(runner -> {
                     runner.spigotPlayer.setAllowFlight(false);
                     runner.spigotPlayer.setFlying(false);
-                    runner.spigotPlayer.setFlySpeed(Helpers.flySpeed);
-                    runner.spigotPlayer.setWalkSpeed(Helpers.walkSpeed);}); // set walk speed back
+                    runner.spigotPlayer.setFlySpeed(Helpers.flySpeed);}); // set walk speed back
                 isOn = true;
+                plugin.getServer().getWorlds().forEach(world -> {
+                    world.setPVP(true);
+                });
+                unregisterListener(BlockBreakPreventer.name);
             }
         };
         timer.schedule(startupTask, 1000 * randomCountdown);
@@ -61,8 +72,6 @@ public class StandardSpeedrun extends Game {
     @Override
     public void endGame()
     {
-
-        plugin.getServer().broadcastMessage("Game has ended!");
         this.isOn = false;
         runners.forEach(runner -> runner.spigotPlayer.setAllowFlight(true)); // allow flight after the game
 
