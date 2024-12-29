@@ -106,9 +106,7 @@ public enum LootTableEntry {
     public ItemStack getItemStack(Random rand, Enchantment enchantment)
     {
         ItemStack stack = new ItemStack(item, getRandomAmount(rand));
-        int maxLevel = enchantment.getMaxLevel();
-        int minLevel = enchantment.getStartLevel();
-        stack.addEnchantment(enchantment, rand.nextInt(maxLevel) + minLevel );
+        addEnchantment(stack, enchantment, rand);
         return stack;
     }
 
@@ -122,9 +120,7 @@ public enum LootTableEntry {
         ItemStack stack = new ItemStack(item, getRandomAmount(rand));
         if(this.enchantment != null)
         {
-            int maxLevel = enchantment.getMaxLevel();
-            int minLevel = enchantment.getStartLevel();
-            stack.addEnchantment(enchantment, rand.nextInt(maxLevel) + minLevel );
+            addEnchantment(stack, enchantment, rand);
         }
         if(this.metaData != null)
         {
@@ -153,6 +149,20 @@ public enum LootTableEntry {
     private int getRandomAmount(Random rand)
     {
         return rand.nextInt(maxDrop - minDrop + 1) + minDrop;
+    }
+
+    private void addEnchantment(ItemStack stack, Enchantment enchantment, Random rand)
+    {
+
+        int maxLevel = enchantment.getMaxLevel();
+        int minLevel = enchantment.getStartLevel();
+        int applicableLevel = rand.nextInt(maxLevel) + minLevel;
+        try {
+            stack.addUnsafeEnchantment(enchantment, applicableLevel); // todo figure out to set enchantmentstoragemeta
+        } catch (IllegalArgumentException e) {
+            // log to console
+            System.out.println("Enchantment " + enchantment.toString() + " of level " +  applicableLevel + " not applicable to item: " + e.getMessage());
+        }
     }
 
 }

@@ -1,8 +1,10 @@
 package dev.osowiz.speedrunstats.util;
 
+import org.bukkit.ChatColor;
+
 import java.text.DecimalFormat;
-import java.util.ArrayList;
-import java.util.Collections;
+import java.util.Comparator;
+import java.util.List;
 
 public final class Helpers {
 
@@ -33,74 +35,38 @@ public final class Helpers {
         return nanoseconds * nanoFactor;
     }
 
-    /**
-     * Returns random teams of given size.
-     * @param runners
-     * @param teamSize
-     * @param policy
-     * @return
-     */
-    public static ArrayList<SpeedrunTeam> raffleTeamsBySize(ArrayList<SpeedRunner> runners, int teamSize, RafflePolicy policy) {
-        if(runners.size() < teamSize || teamSize <= 1) {
-            teamSize = 1;
-        }
-        int overFlow = runners.size() % teamSize;
-        int teamCount = runners.size() / teamSize + (0 < overFlow ? 1 : 0);
-        int nRunners = runners.size();
-        ArrayList<SpeedrunTeam> teams = new ArrayList<SpeedrunTeam>(teamCount);
-        for(int i = 0; i < teamCount; i++) {
-            teams.add(new SpeedrunTeam(new ArrayList<SpeedRunner>())); // initialize teams
-        }
-        System.out.println("size of team array: " + teams.size() + " teamSize: " + teamSize + " runners: " + nRunners);
-        switch(policy) {
-            case RANDOM:
-            {
-                Collections.shuffle(runners);
-                int teamIndex = 0;
-                for(SpeedRunner runner : runners) {
-                    teams.get(teamIndex).addRunner(runner);
-                    teamIndex++;
-                    teamIndex %= teamCount;
-                }
-                break;
-            }
-            case MINIMIZE_RANK_DISPARITY: // currently pretty bad at minimizing rank disparity
-            {
-                Collections.sort(runners, (a, b) -> a.rank - b.rank);
-                int teamIndex = 0;
-                for (SpeedRunner runner : runners) {
-                    teams.get(teamIndex).addRunner(runner);
-                    teamIndex++;
-                    teamIndex %= teamCount;
-                }
-                break;
-            }
-            default:
-            { // use the order in which the runners joined the server.
-                int teamIndex = 0;
-                for(SpeedRunner runner : runners) {
-                    teams.get(teamIndex).addRunner(runner);
-                    teamIndex++;
-                    teamIndex %= teamCount;
-                }
-                break;
-            }
-        }
 
-        return teams;
+    public static void sendResultsToPlayers(List<SpeedrunTeam> teams) {
+        teams.sort(Comparator.comparingInt(SpeedrunTeam::getCurrentObjectiveID).reversed());
+        int previousBest = Integer.MAX_VALUE;
+        int i = 0;
+        for(SpeedrunTeam team : teams)
+        {
+            if(team.getCurrentObjectiveID() < previousBest)
+            {
+                i++;
+                previousBest = team.getCurrentObjectiveID();
+            }
+
+            for(SpeedRunner runner : team.getRunners())
+            {
+                String subTitle = "Your time was: " + Helpers.timeToString(runner.time);
+                if(1e6 - 10.f < runner.time)
+                    subTitle = "Better luck next time!";
+
+                runner.spigotPlayer.sendTitle(ChatColor.BOLD + "You finished in " + Place.getPlace(i).formattedToString() + " place!", subTitle, 10, 200, 20);
+            }
+        }
     }
 
-    public static ArrayList<SpeedrunTeam> raffleTeamsByCount(ArrayList<SpeedRunner> runners, int teamCount, RafflePolicy policy) {
-        if(teamCount <= 1) {
-            teamCount = 1;
+    public static void tellPlayersTheirTeam(List<SpeedrunTeam> teams) {
+        for(SpeedrunTeam team : teams)
+        {
+            for(SpeedRunner runner : team.getRunners())
+            {
+                runner.spigotPlayer.sendTitle(ChatColor.BOLD + "Your team is: ", team.getTeamAsString(), 10, 120, 20);
+            }
         }
-        int overFlow = runners.size() % teamCount;
-        int teamSize = runners.size() / teamCount + ((0 < overFlow) ? 1 : 0);
-        return raffleTeamsBySize(runners, teamSize, policy);
-    }
-
-    public static ArrayList<SpeedrunTeam> raffleTeamsBySize(ArrayList<SpeedRunner> runners, int teamSize){
-        return raffleTeamsBySize(runners, teamSize, RafflePolicy.RANDOM);
     }
 
 }

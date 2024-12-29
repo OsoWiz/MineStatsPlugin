@@ -15,10 +15,8 @@ import java.util.stream.Collectors;
 
 public class EndCrystalDestroyer extends SpeedrunListenerBase {
 
-    public static final String name = "EndCrystalDestroyer";
-
     public EndCrystalDestroyer(SpeedrunStats plugin) {
-        super(plugin, name);
+        super(plugin, EndCrystalDestroyer.class.getName());
     }
 
     @EventHandler
@@ -26,14 +24,15 @@ public class EndCrystalDestroyer extends SpeedrunListenerBase {
 
         World playersWorld = event.getPlayer().getWorld();
         if (playersWorld.getEnvironment() == World.Environment.THE_END) {
+            this.plugin.getLogger().info("Destroying end crystals..");
             List<Entity> endEntities = playersWorld.getEntities();
             for(Entity entity : endEntities) {
                 if(entity instanceof EnderCrystal) {
                     entity.remove();
                 }
             }
-        } // end of if
         // crystals are destroyed, this can be unregistered
         this.unregister();
+        } // end of if
     } // end of onEndCrystalDestroy
 }

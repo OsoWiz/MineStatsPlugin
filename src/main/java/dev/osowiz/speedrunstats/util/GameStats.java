@@ -1,71 +1,58 @@
 package dev.osowiz.speedrunstats.util;
 
-import org.bson.Document;
-import org.bson.types.ObjectId;
-import org.bukkit.entity.Player;
-import org.bukkit.scoreboard.Objective;
-import org.bukkit.scoreboard.Score;
-
 public class GameStats {
-    Score points;
-    Score kills;
-    Score deaths;
+    int points;
+    int kills;
+    int deaths;
 
-    Score currentTime;
-    Objective gameStatsObjective;
+    double currentTime;
     public int currentObjectiveID;
     // Todo add more stats
-    GameStats(Objective scoreboardObjective) {
-        this.gameStatsObjective = scoreboardObjective;
+    GameStats() {
         currentObjectiveID = 0;
-        this.points = scoreboardObjective.getScore("Points");
-        this.kills = scoreboardObjective.getScore("Kills");
-        this.deaths = scoreboardObjective.getScore("Deaths");
-        this.currentTime = scoreboardObjective.getScore("Time");
-
-        points.setScore(0);
-        kills.setScore(0);
-        deaths.setScore(0);
-        currentTime.setScore(0);
+        this.points = 0;
+        this.kills = 0;
+        this.deaths = 0;
+        this.currentTime = 0.0;
     }
 
     public String toString() {
-        return "Points: " + this.points + ", Kills: " + kills.getScore() + " Deaths: " + deaths.getScore();
+        return "Points: " + this.points + ", Kills: " + kills + " Deaths: " + deaths;
     }
 
     public void addPoints(int points)
     {
-        this.points.setScore(this.points.getScore() + points);
+        this.points += points;
     }
 
     public void setPoints(int points)
     {
-        this.points.setScore(points);
+        this.points = points;
     }
 
     public void addKill()
     {
-        this.kills.setScore(this.kills.getScore() + 1);
+        this.kills++;
     }
 
     public void addDeath()
     {
-        this.deaths.setScore(this.deaths.getScore() + 1);
+        this.deaths++;
     }
 
     public int getPoints()
     {
-        return this.points.getScore();
+        return this.points;
     }
 
     public int getKills()
     {
-        return this.kills.getScore();
+        return this.kills;
     }
 
     public int getDeaths()
     {
-        return this.deaths.getScore();
+        return this.deaths;
     }
 
 }

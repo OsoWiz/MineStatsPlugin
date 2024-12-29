@@ -27,9 +27,11 @@ public class PlayerQuitListener extends SpeedrunListenerBase {
         // and make player drop all items in their inventory
         Inventory pInventory = player.getInventory();
         ItemStack[] items = pInventory.getContents();
-        pInventory.clear();
         for(ItemStack item : items) {
+            if(item == null)
+                continue;
             player.getWorld().dropItem(player.getLocation(), item);
         }
+        pInventory.clear();
     }
 }

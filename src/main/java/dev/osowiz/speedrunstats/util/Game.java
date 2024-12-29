@@ -1,12 +1,18 @@
 package dev.osowiz.speedrunstats.util;
 
 import dev.osowiz.speedrunstats.SpeedrunStats;
+import dev.osowiz.speedrunstats.listeners.ConfigurationAbandonListener;
 import dev.osowiz.speedrunstats.listeners.SpeedrunListenerBase;
+import dev.osowiz.speedrunstats.prompts.TeamJoinPrompt;
+import org.bukkit.conversations.Conversation;
+import org.bukkit.conversations.ConversationFactory;
 import org.bukkit.entity.Player;
 import org.bukkit.scoreboard.*;
 
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.List;
+import java.util.UUID;
 
 public abstract class Game {
 
@@ -15,7 +21,9 @@ public abstract class Game {
     protected SpeedrunStats plugin;
     protected Date gameDate = new Date();
     protected long startTimens; // start time in nanoseconds
-    protected ArrayList<SpeedrunTeam> teams = new ArrayList<SpeedrunTeam>();
+    protected List<SpeedrunTeam> teams = new ArrayList<SpeedrunTeam>();
+    // public to allow easy access to prompts. todo pass the builder only?
+    public TeamBuilder teamBuilder = new TeamBuilder();
     // each gametype has their respective listeners
     protected ArrayList<SpeedrunListenerBase> listeners = new ArrayList<SpeedrunListenerBase>();
 
@@ -35,6 +43,46 @@ public abstract class Game {
         return null;
     }
 
+    public SpeedRunner getRunnerByID(UUID uid) {
+        for(SpeedRunner runner : runners) {
+            if(runner.uid.equals(uid)){
+                return runner;
+            }
+        }
+        return null;
+    }
+
+    public List<SpeedRunner> getRunners() {
+        return runners;
+    }
+
+    public boolean containsRunner(UUID uid){
+        for(SpeedRunner runner : runners){
+            if(runner.spigotPlayer.getUniqueId().equals(uid)){
+                return true;
+            }
+        }
+        return false;
+    }
+
+    public boolean containsRunner(String name){
+        for(SpeedRunner runner : runners){
+            if(runner.name.equals(name)){
+                return true;
+            }
+        }
+        return false;
+    }
+
+    public boolean containsPlayer(Player player){
+        for(SpeedRunner runner : runners){
+            if(runner.spigotPlayer.getUniqueId().equals(player.getUniqueId())){
+                return true;
+            }
+        }
+        return false;
+    }
+
     public void initScoreboard(){
         defaultScoreBoard = plugin.getServer().getScoreboardManager().getNewScoreboard();
         Objective newObj = defaultScoreBoard.registerNewObjective("speedrun", "dummy", "Speedrun", RenderType.INTEGER);
@@ -51,6 +99,10 @@ public abstract class Game {
     public void unregisterListener(String listenerName)
     {
         this.listeners.stream().filter(listener -> listener.name.equals(listenerName)).forEach(SpeedrunListenerBase::unregister);
+    }
+
+    public SpeedrunConfig getConfig(){
+        return config;
     }
 
     /**
@@ -85,6 +137,19 @@ public abstract class Game {
         return config.catchupCooldown;
     }
 
+    public float getAverageRank(){
+        if(runners.isEmpty())
+        {
+            return 0.f;
+        }
+
+        float sum = 0;
+        for(SpeedRunner runner : runners) {
+            sum += runner.rank.getCode();
+        }
+        return sum / runners.size();
+    }
+
     /**
      * Returns the start time of the game in nanoseconds.
      * @return start time in nanoseconds
@@ -110,6 +175,26 @@ public abstract class Game {
      * @return category of the game
      */
     public abstract String getCategory();
+
+    public void askPlayerChoices() {
+        ConversationFactory factory = new ConversationFactory(plugin)
+                .withFirstPrompt(new TeamJoinPrompt(this, teamBuilder.getTeamCount(runners.size())))
+                .withEscapeSequence("cancel")
+                .withTimeout(60)
+                .thatExcludesNonPlayersWithMessage("You must be a player to join a team")
+                .addConversationAbandonedListener(new ConfigurationAbandonListener());
+        for(SpeedRunner runner : runners) {
+           factory.buildConversation(runner.spigotPlayer).begin();
+        }
+    }
+
+    /**
+     * Broadcasts a message to all players.
+     * @param message
+     */
+    public void broadcastMessage(String message){
+        plugin.getServer().broadcastMessage(message);
+    }
 
 
     // private methods

@@ -14,4 +14,15 @@ commands:
     description: Tells the number of points you have
     usage: /<command>
     aliases: [score, getpoints, getscore]
-
+  stats:
+    description: Tells the stats of a player sending the command.
+    usage: /<command>
+    aliases: [statistics, getstats, getstatistics]
+  config:
+    description: Configures the speedrun ahead.
+    usage: /<command>
+    aliases: [ conf, setup, konffi ]
+  rank:
+    description: Tells the possible ranks to get and the rank of the player.
+    usage: /<command>
+    aliases: [ranks, getranks, rankit ]

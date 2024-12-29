@@ -4,23 +4,26 @@ import dev.osowiz.speedrunstats.SpeedrunStats;
 import dev.osowiz.speedrunstats.listeners.*;
 import dev.osowiz.speedrunstats.util.*;
 import org.bson.Document;
+import org.bukkit.GameMode;
+import org.bukkit.Statistic;
 import org.bukkit.configuration.Configuration;
 
-import java.util.ArrayList;
-import java.util.Random;
-import java.util.Timer;
-import java.util.TimerTask;
+import java.util.*;
 
 public class StandardSpeedrun extends Game {
 
     private final String category = "standard";
-
-    public int leaderObjectiveID;
+    private SpeedrunScoreBoardManager scoreBoardManager;
+    private StatisticsHandler statsHandler;
     public StandardSpeedrun(SpeedrunStats plugin, SpeedrunConfig config) {
         super.plugin = plugin;
         this.config = config;
-        this.leaderObjectiveID = 0;
-        this.listeners.add(new PlayerJoinListener(plugin, true));
+        statsHandler = new StatisticsHandler(this);
+        statsHandler.addStatistic(Statistic.SNEAK_TIME);
+        statsHandler.addStatistic(Statistic.DAMAGE_BLOCKED_BY_SHIELD);
+        statsHandler.addStatistic(Statistic.DEATHS);
+        this.listeners.add(new WorldListener(plugin, this));
+        this.listeners.add(new PlayerJoinListener(plugin, this, true));
         this.listeners.add(new StandardAdvancementListener(plugin, this));
         this.listeners.add(new StandardCatchupListener(plugin, this));
         this.listeners.add(new StandardKillDeathListener(plugin, this));
@@ -34,21 +37,29 @@ public class StandardSpeedrun extends Game {
 
         // prevent pvp in all worlds at start
         this.plugin.getServer().getWorlds().forEach(world -> {
+            this.plugin.getLogger().info("PVP is off in world " + world.getName());
             world.setPVP(false);
         });
     }
 
     @Override
     public void startGame() {
-
+        runners.forEach(runner -> runner.clearScoreBoard());
         plugin.getServer().broadcastMessage("Game starting soon!");
+
         // create teams
-        if(0 < config.standardTeamSize )
-            Helpers.raffleTeamsBySize(runners, config.standardTeamSize); // todo change wording
+        if(0 < config.standardTeamSize ) {
+            this.teams = teamBuilder.build(runners);
+            plugin.getServer().broadcastMessage("Teams are as follows:");
+            this.teams.forEach(team -> {
+                this.plugin.getServer().broadcastMessage(team.getTeamAsString() + " is ready to roll!");
+            });
+            Helpers.tellPlayersTheirTeam(teams);
+        }
         // set up the start of the game
 
         Random random = new Random();
-        int randomCountdown =  random.nextInt(11) + 10;
+        int randomCountdown =  random.nextInt(11) + 14;
         Timer timer = new Timer();
         TimerTask startupTask = new TimerTask() {
             @Override
@@ -58,7 +69,9 @@ public class StandardSpeedrun extends Game {
                 runners.forEach(runner -> {
                     runner.spigotPlayer.setAllowFlight(false);
                     runner.spigotPlayer.setFlying(false);
-                    runner.spigotPlayer.setFlySpeed(Helpers.flySpeed);}); // set walk speed back
+                    runner.spigotPlayer.setWalkSpeed(Helpers.walkSpeed);
+                    runner.spigotPlayer.setFlySpeed(Helpers.flySpeed);
+                }); // set walk speed back
                 isOn = true;
                 plugin.getServer().getWorlds().forEach(world -> {
                     world.setPVP(true);
@@ -73,10 +86,16 @@ public class StandardSpeedrun extends Game {
     public void endGame()
     {
         this.isOn = false;
-        runners.forEach(runner -> runner.spigotPlayer.setAllowFlight(true)); // allow flight after the game
+        runners.forEach(runner -> {
+            runner.spigotPlayer.setGameMode(GameMode.SPECTATOR);
+        }); // allow flight and spectating after the game
+        // if a team game, send results to players
+        if(this.isTeamGame())
+            Helpers.sendResultsToPlayers(teams);
 
         ArrayList<Document> gameData = new ArrayList<Document>();
         ArrayList<Document> playerData = new ArrayList<Document>();
+        float averageRank = getAverageRank();
         for (SpeedRunner runner : this.runners) // one gamedoc per runner
         {
             Document gameDoc = new Document();
@@ -85,7 +104,7 @@ public class StandardSpeedrun extends Game {
             gameDoc.append("category", category);
             gameDoc.append("team", runner.teamID);
             gameDoc.append("time", runner.time);
-            gameDoc.append("score", runner.stats.getPoints());
+            gameDoc.append("score", calculateFinalScore(runner, averageRank));
             gameDoc.append("kills", runner.stats.getKills());
             gameDoc.append("deaths", runner.stats.getDeaths());
             gameDoc.append("date", gameDate);
@@ -96,6 +115,37 @@ public class StandardSpeedrun extends Game {
 
         plugin.uploadPlayerData(playerData);
         plugin.uploadGameData(gameData);
+
+        Map<Statistic, SpeedRunner> statsMap = statsHandler.calculateLeaders();
+        this.scoreBoardManager.createAndSetTriviaBoard(statsMap);
+    }
+
+    public void registerScoreBoardManager() {
+        this.scoreBoardManager = new SpeedrunScoreBoardManager(plugin.getServer().getScoreboardManager());
+    }
+
+    private int calculateFinalScore(SpeedRunner runner, float averageRank)
+    {
+        int baseScore = runner.stats.getPoints();
+        baseScore += StandardSpeedrunScoring.calculateDeathScore(runner.stats.getDeaths());
+        if(isTeamGame() && -1 < runner.teamID )
+        {
+            SpeedrunTeam runnerTeam = getTeamByID(runner.teamID);
+            baseScore += StandardSpeedrunScoring.getEyeOfEnderScore(runnerTeam);
+            baseScore = (int) ((float) baseScore * StandardSpeedrunScoring.calculateEloBoost(averageRank, runnerTeam.getAverageRank()));
+        } else {
+            baseScore += StandardSpeedrunScoring.getEyeOfEnderScore(runner);
+            baseScore = (int) ((float) baseScore * StandardSpeedrunScoring.calculateEloBoost(averageRank, runner.rank.getCode()) );
+        }
+
+        return baseScore;
+    }
+
+    @Override
+    public void addRunner(SpeedRunner runner) {
+        super.addRunner(runner);
+        scoreBoardManager.updateDefaultScoreBoard();
+        scoreBoardManager.getDefaultScoreBoard().setToRunner(runner);
     }
 
     @Override

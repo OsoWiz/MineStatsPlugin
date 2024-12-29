@@ -2,13 +2,14 @@ package dev.osowiz.speedrunstats;
 
 import com.mongodb.client.*;
 import com.mongodb.client.model.Filters;
-import dev.osowiz.speedrunstats.commands.PointsCommand;
-import dev.osowiz.speedrunstats.commands.StartCommand;
+import dev.osowiz.speedrunstats.commands.*;
 import dev.osowiz.speedrunstats.gametypes.StandardSpeedrun;
 import dev.osowiz.speedrunstats.util.*;
 import org.bson.Document;
 // mongodb
 // bukkit
+import org.bukkit.ChatColor;
+import org.bukkit.Statistic;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.java.JavaPlugin;
@@ -81,6 +82,7 @@ public final class SpeedrunStats extends JavaPlugin {
             getLogger().info("Error connecting to the database");
             e.printStackTrace();
         }
+        getLogger().info("Connected to the database, currently there are " + players.countDocuments() + " players and " + games.countDocuments() + " games in the database");
 
         // check whether world folder exists and delete it
         if(this.config.getBoolean("delete_worlds_on_startup")) {
@@ -107,8 +109,12 @@ public final class SpeedrunStats extends JavaPlugin {
         // set up commands
         this.getCommand("start").setExecutor(new StartCommand(this));
         this.getCommand("points").setExecutor(new PointsCommand(this, game));
+        this.getCommand("stats").setExecutor(new StatsCommand(this));
+        this.getCommand("config").setExecutor(new ConfigureCommand(this, game));
+        this.getCommand("rank").setExecutor(new RankCommand(this, game));
 
         // test
+
         this.saveConfig();
     }
 
@@ -164,8 +170,8 @@ public final class SpeedrunStats extends JavaPlugin {
 
         FindIterable docIter = this.games.find(
                 Filters.and(
-                Filters.eq("uid", uid),
-                        Filters.eq("gamemode", this.config.getString("gamemode"))
+                Filters.eq("runnerid", uid),
+                        Filters.eq("category", this.config.getString("gamemode"))
                 ));
         int playerAllKills = playerDoc.getInteger("kills");
         int playerAllDeaths = playerDoc.getInteger("deaths");
@@ -199,10 +205,11 @@ public final class SpeedrunStats extends JavaPlugin {
             avgScore /= numGames;
         }
 
-        int rank = calculateRank(uid, this.game.getCategory());
+        Rank rank = calculateRank(uid, this.game.getCategory());
         getServer().broadcastMessage("Player " + player.getName()
                 + " with a rank " + rank + " and pb of " + Helpers.timeToString(bestTime) + " has joined the game!");
-
+        player.setDisplayName(rank.getColor() + player.getName() + ChatColor.RESET);
+        player.setPlayerListName(rank.getColor() + player.getName() + ChatColor.RESET);
         SpeedRunner runner = new SpeedRunner(player, allKills, allDeaths, bestScore, rank, bestTime);
         this.game.addRunner(runner);
     }
@@ -218,37 +225,37 @@ public final class SpeedrunStats extends JavaPlugin {
         });
     }
 
-    public int calculateRank(String uid, String category)
+    public Rank calculateRank(String uid, String category)
     {
         // games are considered for the past three months, weighted by time
         Date now = new Date();
-        Date threeMonthsAgo = new Date(now.getTime() - 3 * 30 * 24 * 60 * 60 * 1000);
+        long ago = 120L * 24L * 3600L * 1000L;
+        Date tresholdDate = new Date(now.getTime() - ago);
 
         FindIterable<Document> docIter = this.games.find(
                 Filters.and(
-                        Filters.eq("uid", uid),
+                        Filters.eq("runnerid", uid),
                         Filters.eq("category", category),
-                        Filters.gte("date", threeMonthsAgo)
+                        Filters.gt("date", tresholdDate)
                 ));
-        int totalScore = 0;
+
+        float totalScore = 0.f;
         float weightSum = 0.f;
         for(Document doc : docIter)
         {
             int score = doc.getInteger("score");
-            long time = doc.getLong("time");
-            float weight = 1.f - (float) (now.getTime() - doc.getDate("date").getTime()) / (now.getTime() - threeMonthsAgo.getTime());
-            totalScore += score * weight;
+            double time = doc.getDouble("time");
+            float weight = 1.f -  ( (float) now.getTime() - doc.getDate("date").getTime()) / ( (float) now.getTime() - tresholdDate.getTime());
+            totalScore += ((float) score) * weight;
             weightSum += weight;
         }
-        if(weightSum < 1e-6)
+        if(weightSum < 1.f)
         {
-            return 0;
+            weightSum = 1.f; // no boost to old scores
         }
+
         int normalizedScore = (int) (totalScore / weightSum);
-        if(category == "standard")
-            return StandardSpeedrunScoring.calculateRank(normalizedScore);
-        else
-            return 0;
+        return Rank.calculateRank(normalizedScore);
     }
 
     private Document findByName(String name) {

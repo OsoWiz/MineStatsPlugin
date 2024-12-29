@@ -30,11 +30,10 @@ public class StandardKillDeathListener extends SpeedrunListenerBase {
         runner.stats.addDeath();
 
         Entity killer = player.getKiller();
-        if( !(killer instanceof Player) ) { // if killer is a mob
+        if( !(killer instanceof Player playerKiller) ) { // if killer is a mob
             return;
         }
 
-        Player playerKiller = (Player) killer;
         SpeedRunner killerRunner = game.getRunnerByName(playerKiller.getName());
         if(killerRunner == null)
         {

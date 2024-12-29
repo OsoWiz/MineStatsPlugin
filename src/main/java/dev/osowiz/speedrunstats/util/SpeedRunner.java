@@ -5,6 +5,8 @@ import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 import org.bukkit.scoreboard.*;
 
+import java.util.UUID;
+
 /**
  * This class represents a player who is participating in a speedrun.
  *
@@ -20,7 +22,8 @@ public class SpeedRunner {
     Scoreboard runnerBoard;
 
     public String name;
-    public int rank;
+    public final UUID uid;
+    public Rank rank;
     public int gamesPlayed;
     public int teamID = -1;
     public double time;
@@ -36,7 +39,7 @@ public class SpeedRunner {
      */
     public GameStats stats;
 
-    public SpeedRunner(Player player, int allKills, int allDeaths, int highestScore, int rank, double fastestTime)
+    public SpeedRunner(Player player, int allKills, int allDeaths, int highestScore, Rank rank, double fastestTime)
     {
         this.spigotPlayer = player;
         name = player.getName();
@@ -47,12 +50,8 @@ public class SpeedRunner {
         this.rank = rank;
         this.time = 1e6;
         this.lastCooldown = System.nanoTime();
-        runnerBoard = Bukkit.getScoreboardManager().getNewScoreboard();
-        Objective statsObjective = runnerBoard.registerNewObjective("statsboard", Criteria.DUMMY, "Your stats", RenderType.INTEGER);
-        statsObjective.setDisplaySlot(DisplaySlot.BELOW_NAME);
-
-        this.stats = new GameStats(statsObjective);
-        this.spigotPlayer.setScoreboard(runnerBoard);
+        this.uid = player.getUniqueId();
+        this.stats = new GameStats();
     }
 
     /**
@@ -63,7 +62,7 @@ public class SpeedRunner {
         stats.addPoints(res.getPoints());
         if(-1 < res.getAdvancementLevel() && stats.currentObjectiveID <= res.getAdvancementLevel())
         {
-            for(int i = stats.currentObjectiveID; i < res.getAdvancementLevel(); i++)
+            for(int i = stats.currentObjectiveID; i <= res.getAdvancementLevel(); i++)
             {
                 stats.addPoints(StandardSpeedrunScoring.corePoints[i]);
             }
@@ -81,18 +80,35 @@ public class SpeedRunner {
         lastCooldown = System.nanoTime();
     }
 
-
-
+    /**
+     * Returns the updated player document for mongodb.
+     * @return
+     */
     public Document getUpdatedPlayerDocument()
     {
         Document doc = new Document();
         doc.append("uid", spigotPlayer.getUniqueId().toString());
         doc.append("name", name);
-        doc.append("kills", allKills + stats.kills.getScore());
-        doc.append("deaths", allDeaths + stats.deaths.getScore());
+        doc.append("kills", allKills + stats.kills);
+        doc.append("deaths", allDeaths + stats.deaths);
         doc.append("games", gamesPlayed + 1);
 
         return doc;
+    }
+
+    public void clearScoreBoard()
+    {
+        this.spigotPlayer.setScoreboard(Bukkit.getScoreboardManager().getNewScoreboard());
+    }
+
+    public int getDeathsThisGame()
+    {
+        return stats.getDeaths();
+    }
+
+    public int getKillsThisGame()
+    {
+        return stats.getKills();
     }
 
 }

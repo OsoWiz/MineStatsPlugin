@@ -18,6 +18,7 @@ public final class StandardSpeedrunScoring {
             new ItemStack(Material.STONE_PICKAXE, 1),
             new ItemStack(Material.BREAD, 3)
     };
+
     static public final String[] coreObjectives = new String[]{
             "Find iron",
             "Get a bucket of lava",
@@ -85,7 +86,8 @@ public final class StandardSpeedrunScoring {
                 break;
             }
             // other advancements
-            case "adventure/sleep_in_bed": {
+            case "adventure/sleep_in_bed":
+            case "nether/obtain_crying_obsidian":{
                 score = 1;
                 break;
             }
@@ -95,7 +97,8 @@ public final class StandardSpeedrunScoring {
             case "nether/return_to_sender":
             case "nether/distract_piglin":
             case "adventure/kill_a_mob":
-            case "adventure/shoot_arrow": {
+            case "adventure/shoot_arrow":
+            case "adventure/spyglass_at_ghast": {
                 score = 2;
                 break;
             }
@@ -109,7 +112,7 @@ public final class StandardSpeedrunScoring {
             }
             case "story/form_obsidian":
             case "story/obtain_beehive":
-            case "nether/charge_respawn_anchor":
+            case "nether/ride_strider":
             case "adventure/voluntary_exile":
             case "adventure/trade":
             case "husbandry/tame_an_animal": {
@@ -118,11 +121,15 @@ public final class StandardSpeedrunScoring {
             }
             case "adventure/throw_trident":
             case "adventure/totem_of_undying":
-            case "adventure/summon_iron_golem": {
+            case "adventure/summon_iron_golem":
+            case "nether/charge_respawn_anchor": {
                 score = 5;
                 break;
             }
-            case "story/mine_diamond": {
+            case "story/mine_diamond":
+            case "story/shiny_gear":
+            case "nether/obtain_ancient_debris":
+            case "nether/fast_travel": {
                 score = 6;
                 break;
             }
@@ -133,7 +140,7 @@ public final class StandardSpeedrunScoring {
                 score = 8;
                 break;
             }
-            case "story/shiny_gear": {
+            case "adventure/spyglass_at_dragon": {
                 score = 10;
                 break;
             }
@@ -177,19 +184,109 @@ public final class StandardSpeedrunScoring {
     }
 
     /**
-     * Calculates the rank (can be used as an index to rank names)
-     * @param score is usually the average of all the scores of the player.
+     * This method calculates the score based on eyes of ender, or their components collected.
+     * @param runner to calculate for
      * @return
      */
-    static public int calculateRank(int score) {
-        if(score < 0)
+    static public int getEyeOfEnderScore(SpeedRunner runner) {
+        if(finalMission <= runner.stats.currentObjectiveID)
         {
             return 0;
         }
-        double dScore = (double) score;
-        double base = dScore / 15000 + 1;
-        double dRank = Math.pow(base, dScore) + dScore / 100 - 1;
-        return (int) Math.min(dRank, MaxRank);
+
+        int numEyes = 0;
+        int numRods = 0;
+        int numBlazePowder = 0;
+        int numPearls = 0;
+        for(ItemStack stack : runner.spigotPlayer.getInventory().getContents())
+        {
+            if(stack == null)
+            {
+                continue;
+            }
+
+            switch(stack.getType())
+            {
+                case ENDER_EYE:
+                    numEyes += stack.getAmount();
+                    break;
+                case BLAZE_ROD:
+                    numRods += stack.getAmount();
+                    break;
+                case BLAZE_POWDER:
+                    numBlazePowder += stack.getAmount();
+                    break;
+                case ENDER_PEARL:
+                    numPearls += stack.getAmount();
+                    break;
+                default:
+                    break;
+            }
+        }
+        return calculateEyeScore(numEyes, numRods, numBlazePowder, numPearls);
+    }
+
+    /**
+     * This method calculates the score based on eyes of ender, or their components collected.
+     * @param team to calculate for
+     * @return
+     */
+    static public int getEyeOfEnderScore(SpeedrunTeam team) {
+        if(finalMission <= team.getCurrentObjectiveID()) // if player has not entered the end
+        {
+            return 0;
+        }
+
+        int numEyes = 0;
+        int numRods = 0;
+        int numBlazePowder = 0;
+        int numPearls = 0;
+        for(SpeedRunner runner : team.getRunners()) {
+            for (ItemStack stack : runner.spigotPlayer.getInventory().getContents()) {
+                if (stack == null) {
+                    continue;
+                }
+
+                switch (stack.getType()) {
+                    case ENDER_EYE:
+                        numEyes += stack.getAmount();
+                        break;
+                    case BLAZE_ROD:
+                        numRods += stack.getAmount();
+                        break;
+                    case BLAZE_POWDER:
+                        numBlazePowder += stack.getAmount();
+                        break;
+                    case ENDER_PEARL:
+                        numPearls += stack.getAmount();
+                        break;
+                    default:
+                        break;
+                }
+            }
+        }
+        return calculateEyeScore(numEyes, numRods, numBlazePowder, numPearls);
+    }
+
+    private static int calculateEyeScore(int numEyes, int numRods, int numPowder, int numPearls) {
+        int score = 2 * numEyes + Math.min(12, numPearls) / 2
+                + Math.min(12, numPowder + 2 * numRods) / 2;
+        return Math.min(score, 24);
+    }
+
+    public static int calculateDeathScore(int deaths) {
+        return Math.max(0, 10 - 2 * deaths);
+    }
+
+    /**
+     * Calculates the elo boost for a a player or a team based on their rank and the average rank of the game.
+     * @param avgRank of the game at hand
+     * @param boostRank to calculate boost for.
+     * @return
+     */
+    public static float calculateEloBoost(float avgRank, float boostRank)
+    {
+        return (float) Math.max(1.f, Math.pow(1.1f, avgRank - boostRank));
     }
 
 }

@@ -1,11 +1,9 @@
 package dev.osowiz.speedrunstats.util;
 
 import dev.osowiz.speedrunstats.SpeedrunStats;
+import org.bukkit.ChatColor;
 import org.bukkit.entity.Player;
-import org.bukkit.scoreboard.Criteria;
-import org.bukkit.scoreboard.Objective;
-import org.bukkit.scoreboard.Scoreboard;
-import org.bukkit.scoreboard.Team;
+import org.bukkit.scoreboard.*;
 
 public class SpeedrunScoreBoard {
 
@@ -15,6 +13,19 @@ public class SpeedrunScoreBoard {
     public SpeedrunScoreBoard(Scoreboard board, String displayName) {
         this.board = board;
         objective = board.registerNewObjective(SpeedrunStats.class.getName(), Criteria.DUMMY, displayName);
+        objective.setDisplaySlot(DisplaySlot.SIDEBAR);
+    }
+
+    public void registerScore(String scoreKey, int slot, String prefix, int initialScore) {
+        Team scoreTeam = board.registerNewTeam(scoreKey);
+        scoreTeam.addEntry(getSlotKey(slot));
+        scoreTeam.setPrefix(prefix);
+        scoreTeam.setSuffix(initialScore + "");
+        objective.getScore(scoreKey).setScore(slot); // we also need to set, otherwise this won't show up.
+    }
+
+    public String getSlotKey(int slot) {
+        return ChatColor.values()[slot].toString();
     }
 
     /**
@@ -71,12 +82,15 @@ public class SpeedrunScoreBoard {
 
 
     /**
-     * Sets multiple lines of text in the scoreboard according to the order they are passed in.
+     * Sets multiple lines of text in the scoreboard from the top according to the order they are passed in.
      * @param lines to set to the scoreboard.
      */
     public void setLines(String ... lines) {
+        int slot = 15; // start from the top
         for(String line : lines) {
-            objective.getScore(line);
+            if(slot < 0)
+                break;
+            objective.getScore(line).setScore(slot--);
         }
     }
 
@@ -88,7 +102,14 @@ public class SpeedrunScoreBoard {
         playerToSet.setScoreboard(board);
     }
 
+    public void setToRunner(SpeedRunner runner) {
+        runner.spigotPlayer.setScoreboard(board);
+    }
 
+    /**
+     * Returns the actual scoreboard object.
+     * @return
+     */
     public Scoreboard getBoard() {
         return board;
     }

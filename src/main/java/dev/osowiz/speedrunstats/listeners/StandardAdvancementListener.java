@@ -1,10 +1,8 @@
 package dev.osowiz.speedrunstats.listeners;
 
 import dev.osowiz.speedrunstats.gametypes.StandardSpeedrun;
-import dev.osowiz.speedrunstats.util.AdvancementResult;
-import dev.osowiz.speedrunstats.util.SpeedRunner;
-import dev.osowiz.speedrunstats.util.SpeedrunTeam;
-import dev.osowiz.speedrunstats.util.StandardSpeedrunScoring;
+import dev.osowiz.speedrunstats.util.*;
+import org.bukkit.ChatColor;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.player.PlayerAdvancementDoneEvent;
 import org.bukkit.plugin.Plugin;
@@ -20,14 +18,14 @@ public class StandardAdvancementListener extends SpeedrunListenerBase {
 
     @EventHandler
     public void onAdvancement(PlayerAdvancementDoneEvent event) {
-        SpeedRunner runner = game.getRunnerByName(event.getPlayer().getName());
+        SpeedRunner runner = game.getRunnerByID(event.getPlayer().getUniqueId());
         if(runner == null) {
             return;
         }
         String advancementKey = event.getAdvancement().getKey().getKey();
         AdvancementResult res = StandardSpeedrunScoring.getScoreForAdvancement(advancementKey);
         SpeedrunTeam team = null;
-        if(game.isTeamGame())
+        if(game.isTeamGame() && -1 < res.getAdvancementLevel())
         {   // team advancement
             team = game.getTeamByID(runner.teamID);
             team.advancementDone(res);
@@ -45,10 +43,10 @@ public class StandardAdvancementListener extends SpeedrunListenerBase {
                 team.getRunners().forEach(teamRunner -> {
                     teamRunner.time = elapsedTimeInSeconds;
                 });
-                plugin.getServer().broadcastMessage("Team " + team.teamID + " has finished the game in " + elapsedTimeInSeconds + " seconds!");
+                plugin.getServer().broadcastMessage(team.teamColor + "Team " + team.teamID + ": " + team.getTeamAsString() + ChatColor.RESET + " has finished the game in " + Helpers.timeToString(elapsedTimeInSeconds) + "!");
             } else {
                 runner.time = elapsedTimeInSeconds;
-                plugin.getServer().broadcastMessage(runner.name + " has finished the game in " + elapsedTimeInSeconds + " seconds!");
+                plugin.getServer().broadcastMessage(runner.name + " has finished the game in " + Helpers.timeToString(elapsedTimeInSeconds) + "!");
             }
             game.endGame();
             this.unregister(); // no more advancements points

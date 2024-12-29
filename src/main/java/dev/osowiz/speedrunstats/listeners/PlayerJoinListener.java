@@ -15,12 +15,12 @@ import java.util.function.Function;
  */
 public class PlayerJoinListener extends SpeedrunListenerBase {
 
-    boolean canJoin = true;
     boolean preventMovement;
     Function<Player, Void> playerAddFunction;
-    public static final String name = "PlayerJoinListener";
-    public PlayerJoinListener(SpeedrunStats plugin, boolean preventMovement) {
-        super(plugin, name);
+    private Game game;
+    public PlayerJoinListener(SpeedrunStats plugin, Game game, boolean preventMovement) {
+        super(plugin, PlayerJoinListener.class.getName());
+        this.game = game;
         playerAddFunction = (player) -> {
             plugin.addPlayerToGame(player);
             return null;
@@ -30,10 +30,14 @@ public class PlayerJoinListener extends SpeedrunListenerBase {
 
     @EventHandler
     public void onPlayerJoin(PlayerJoinEvent event) {
-        if(!canJoin) {
+
+        if(game.isOn && !game.containsPlayer(event.getPlayer())) { // game is on and player is not in the game -> kick
             event.getPlayer().kickPlayer("You cannot join the server at this time.");
             return;
+        }else if(game.isOn) { // game is on and player is already in the game -> do nothing
+            return;
         }
+
         event.getPlayer().sendMessage("Welcome to the server!");
         Player player = event.getPlayer();
         if(preventMovement)
@@ -41,6 +45,7 @@ public class PlayerJoinListener extends SpeedrunListenerBase {
             player.setAllowFlight(true);
             player.setFlying(true);
             player.setFlySpeed(0.f);
+            player.setWalkSpeed(0.f);
         }
 
         playerAddFunction.apply(player);
