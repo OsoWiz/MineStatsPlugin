@@ -1,5 +1,7 @@
 package dev.osowiz.speedrunstats.util;
 
+import dev.osowiz.speedrunstats.SpeedrunDB;
+import dev.osowiz.speedrunstats.documents.PlayerDocument;
 import org.bson.Document;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
@@ -21,7 +23,7 @@ public class SpeedRunner {
     double fastestTime;
     Scoreboard runnerBoard;
 
-    public String name;
+    private String name;
     public final UUID uid;
     public Rank rank;
     public int gamesPlayed;
@@ -48,10 +50,14 @@ public class SpeedRunner {
         this.highestScore = highestScore;
         this.fastestTime = fastestTime;
         this.rank = rank;
-        this.time = 1e6;
+        this.time = Double.POSITIVE_INFINITY;
         this.lastCooldown = System.nanoTime();
         this.uid = player.getUniqueId();
         this.stats = new GameStats();
+    }
+
+    public String getName() {
+        return name;
     }
 
     /**

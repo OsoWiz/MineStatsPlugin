@@ -1,13 +1,14 @@
 package dev.osowiz.speedrunstats.commands;
 
 import dev.osowiz.speedrunstats.SpeedrunStats;
-import org.bukkit.Statistic;
+import dev.osowiz.speedrunstats.enums.Statistic;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 
 public class StatsCommand extends SpeedrunCommandBase {
 
+    public static final String name = "stats";
     public StatsCommand(SpeedrunStats plugin) {
         super(plugin);
     }
@@ -18,10 +19,12 @@ public class StatsCommand extends SpeedrunCommandBase {
             return false;
         }
         Player player = (Player) sender;
-
-        sender.sendMessage("You have dealt: " + player.getStatistic(Statistic.DAMAGE_DEALT));
-        sender.sendMessage("You have jumped a total of: " + player.getStatistic(Statistic.JUMP));
-        sender.sendMessage( "You have walked: " + player.getStatistic(Statistic.WALK_ONE_CM) / 100 + " meters");
+        float tickRate = player.getServer().getServerTickManager().getTickRate();
+        sender.sendMessage("You have dealt: " + Statistic.DAMAGE_DEALT.getFormattedValue(player));
+        sender.sendMessage("You have jumped a total of: " + Statistic.TIMES_JUMPED.getFormattedValue(player));
+        sender.sendMessage( "You have walked: " + Statistic.WALK_DISTANCE.getFormattedValue(player));
+        sender.sendMessage("You have tanked : " + Statistic.DAMAGE_TAKEN.getFormattedValue(player));
+        sender.sendMessage("You have sneaked for: " +Statistic.SNEAK_TIME.getFormattedValue(player));
         return true;
     }
 

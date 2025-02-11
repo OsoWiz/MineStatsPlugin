@@ -3,18 +3,17 @@ package dev.osowiz.speedrunstats.commands;
 import dev.osowiz.speedrunstats.SpeedrunStats;
 import dev.osowiz.speedrunstats.listeners.ConfigurationAbandonListener;
 import dev.osowiz.speedrunstats.prompts.StrategyPrompt;
-import dev.osowiz.speedrunstats.util.Game;
+import dev.osowiz.speedrunstats.games.Game;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
 import org.bukkit.conversations.*;
 import org.bukkit.entity.Player;
-import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
 
 public class ConfigureCommand extends SpeedrunCommandBase {
 
+    public static final String name = "config";
     private Game game;
-    private ConversationFactory factory;
+    private final ConversationFactory factory;
     public ConfigureCommand(SpeedrunStats plugin, Game game) {
         super(plugin);
         this.game = game;

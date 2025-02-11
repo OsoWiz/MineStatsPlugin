@@ -15,8 +15,8 @@ import java.util.Random;
 
 public class PiglinLootTableFixer extends SpeedrunListenerBase{
 
-    private Random random = new Random();
-    private LootTable lootTable;
+    private final Random random = new Random();
+    private final LootTable lootTable;
     public static final String name = "PiglinLootTableFixer";
 
     public PiglinLootTableFixer(SpeedrunStats plugin, LootTable table) {

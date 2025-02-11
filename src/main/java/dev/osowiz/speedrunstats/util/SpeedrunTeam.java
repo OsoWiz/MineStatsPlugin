@@ -12,6 +12,9 @@ import java.util.List;
  * Represents a team in the game
  */
 public class SpeedrunTeam {
+
+    public static final int NONE = -1;
+
     private ArrayList<SpeedRunner> runners = new ArrayList<SpeedRunner>();
 
     private int currentObjectiveID = 0;
@@ -77,6 +80,13 @@ public class SpeedrunTeam {
         return runners;
     }
 
+    public void setRunners(List<SpeedRunner> runners) {
+        this.runners = new ArrayList<>(runners);
+        for (SpeedRunner runner : runners) {
+            runner.teamID = teamID;
+        }
+    }
+
     /**
      * Returns the team name and the players in the team as a string.
      * @return
@@ -86,6 +96,10 @@ public class SpeedrunTeam {
         sb.append(this.teamColor +  "Team " + teamColor.name()+ ": ");
         sb.append(getPlayersAsString());
         return sb.toString();
+    }
+
+    public int size() {
+        return runners.size();
     }
 
     /**
@@ -113,7 +127,7 @@ public class SpeedrunTeam {
         StringBuilder sb = new StringBuilder();
         sb.append(this.teamColor);
         for(SpeedRunner runner : runners) {
-            sb.append(runner.name);
+            sb.append(runner.getName());
             sb.append(delimiter);
         }
         sb.delete(sb.length() - delimiter.length(), sb.length()); // delete last delimiter

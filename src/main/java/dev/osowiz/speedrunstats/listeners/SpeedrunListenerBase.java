@@ -1,15 +1,16 @@
 package dev.osowiz.speedrunstats.listeners;
 
 
+import dev.osowiz.speedrunstats.SpeedrunStats;
 import org.bukkit.plugin.Plugin;
 import org.bukkit.event.Listener;
 import org.bukkit.event.HandlerList;
 public class SpeedrunListenerBase implements Listener {
 
-    protected Plugin plugin;
+    protected SpeedrunStats plugin;
 
     public final String name;
-    public SpeedrunListenerBase(Plugin plugin, String name)
+    public SpeedrunListenerBase(SpeedrunStats plugin, String name)
     {
         this.plugin = plugin;
         this.name = name;

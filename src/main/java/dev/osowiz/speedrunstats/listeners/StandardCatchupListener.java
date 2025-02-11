@@ -1,13 +1,14 @@
 package dev.osowiz.speedrunstats.listeners;
 
 import dev.osowiz.speedrunstats.SpeedrunStats;
-import dev.osowiz.speedrunstats.gametypes.StandardSpeedrun;
+import dev.osowiz.speedrunstats.games.StandardSpeedrun;
+import dev.osowiz.speedrunstats.prompts.TeleportPrompt;
 import dev.osowiz.speedrunstats.util.Helpers;
 import dev.osowiz.speedrunstats.util.SpeedRunner;
 import dev.osowiz.speedrunstats.util.SpeedrunTeam;
 import dev.osowiz.speedrunstats.util.StandardSpeedrunScoring;
-import org.bukkit.Bukkit;
-import org.bukkit.Location;
+import org.bukkit.conversations.Conversation;
+import org.bukkit.conversations.ConversationFactory;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.player.PlayerRespawnEvent;
@@ -37,7 +38,7 @@ public class StandardCatchupListener extends SpeedrunListenerBase {
         SpeedRunner runner = game.getRunnerByID(player.getUniqueId());
         if(runner == null)
         {
-            plugin.getLogger().warning("Runner " + player.getName() + " not found in game.");
+            plugin.getLogger().warning("Runner " + player.getName() + " not found in game on respawn listener.");
             return;
         }
 
@@ -56,33 +57,16 @@ public class StandardCatchupListener extends SpeedrunListenerBase {
         // Check if it's a team game and start the teleport timer
         if (game.isTeamGame() && runner.teamID != -1) {
             SpeedrunTeam team = game.getTeamByID(runner.teamID);
-            if (team != null) {
-                // get partner with least deaths
-                Optional<SpeedRunner> bestPartner = team.getRunners().stream().filter(r -> r.uid != runner.uid).min(Comparator.comparingInt(SpeedRunner::getDeathsThisGame));
-                if (bestPartner.isPresent() && bestPartner.get().spigotPlayer.isOnline()) {
-                    SpeedRunner partner = bestPartner.get();
-                    int deathsNow = partner.getDeathsThisGame();
-                    Double currentCooldown = coolDowns.getOrDefault(runner.uid, STARTING_TP_COOLDOWN);
-                    Timer timer = new Timer();
-                    player.sendMessage("Teleporting to your team partner in " + currentCooldown + " seconds if they stay alive.");
-                    timer.schedule(new TimerTask() {
-                        @Override
-                        public void run() {
-                            if (partner.spigotPlayer.isOnline() && !partner.spigotPlayer.isDead()
-                                    && deathsNow == partner.getDeathsThisGame()) {
-                                Location partnerLocation = partner.spigotPlayer.getLocation();
-                                Bukkit.getScheduler().runTask(plugin, () -> player.teleport(partnerLocation));
-                                player.sendMessage("You have been teleported to your team partner.");
-                                coolDowns.compute(runner.uid, (k, v) -> {
-                                    if(v != null) return v + 10.d;
-                                    return currentCooldown;
-                                } );
-                            }
-                        }
-                    },  currentCooldown.longValue() * 1000 ); // 30 seconds
-                }
-            } else {
-                plugin.getLogger().warning("Team " + runner.teamID + " not found in game despite this game being a team game.");
+            if (team != null && team.size() > 1) {
+                Double currentCooldown = coolDowns.getOrDefault(runner.uid, STARTING_TP_COOLDOWN);
+                // start a new conversation with the player
+                Conversation conversation = new ConversationFactory(plugin)
+                        .withFirstPrompt(new TeleportPrompt(this.game, player, team, currentCooldown))
+                        .withEscapeSequence("cancel")
+                        .withTimeout(currentCooldown.intValue())
+                        .buildConversation(player);
+                conversation.begin();
+                coolDowns.put(runner.uid, currentCooldown + 10); // increase cooldown by 10 seconds
             }
         }
 

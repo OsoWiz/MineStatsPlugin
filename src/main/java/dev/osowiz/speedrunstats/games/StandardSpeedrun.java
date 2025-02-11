@@ -1,29 +1,33 @@
-package dev.osowiz.speedrunstats.gametypes;
+package dev.osowiz.speedrunstats.games;
 
 import dev.osowiz.speedrunstats.SpeedrunStats;
+import dev.osowiz.speedrunstats.documents.GameDocument;
+import dev.osowiz.speedrunstats.documents.PlayerDocument;
+import dev.osowiz.speedrunstats.documents.RunDocument;
 import dev.osowiz.speedrunstats.listeners.*;
 import dev.osowiz.speedrunstats.util.*;
-import org.bson.Document;
 import org.bukkit.GameMode;
-import org.bukkit.Statistic;
-import org.bukkit.configuration.Configuration;
+import org.bukkit.Sound;
+import dev.osowiz.speedrunstats.enums.Statistic;
 
 import java.util.*;
 
 public class StandardSpeedrun extends Game {
 
     private final String category = "standard";
-    private SpeedrunScoreBoardManager scoreBoardManager;
-    private StatisticsHandler statsHandler;
+
     public StandardSpeedrun(SpeedrunStats plugin, SpeedrunConfig config) {
-        super.plugin = plugin;
-        this.config = config;
-        statsHandler = new StatisticsHandler(this);
-        statsHandler.addStatistic(Statistic.SNEAK_TIME);
-        statsHandler.addStatistic(Statistic.DAMAGE_BLOCKED_BY_SHIELD);
-        statsHandler.addStatistic(Statistic.DEATHS);
-        this.listeners.add(new WorldListener(plugin, this));
-        this.listeners.add(new PlayerJoinListener(plugin, this, true));
+        super(plugin, config);
+        this.statsHandler.addStatistic(Statistic.TARGET_HIT);
+        this.statsHandler.addStatistic(Statistic.CHESTS_OPENED);
+        this.statsHandler.addStatistic(Statistic.ANIMALS_BRED);
+        this.statsHandler.addStatistic(Statistic.FISH_CAUGHT);
+        this.statsHandler.addStatistic(Statistic.DAMAGE_BLOCKED_BY_SHIELD);
+        this.statsHandler.addStatistic(Statistic.DAMAGE_DEALT);
+        this.statsHandler.addStatistic(Statistic.DAMAGE_TAKEN);
+        this.statsHandler.addStatistic(Statistic.SNEAK_TIME);
+        this.listeners.add(new PlayerJoinListener(plugin, this));
+        this.listeners.add(new MovementPreventer(plugin));
         this.listeners.add(new StandardAdvancementListener(plugin, this));
         this.listeners.add(new StandardCatchupListener(plugin, this));
         this.listeners.add(new StandardKillDeathListener(plugin, this));
@@ -32,6 +36,7 @@ public class StandardSpeedrun extends Game {
         this.listeners.add(new PiglinLootTableFixer(plugin, config.lootTable));
         this.listeners.add(new PlayerQuitListener(plugin));
         this.listeners.add(new BlockBreakPreventer(plugin));
+        // this.listeners.add(new SpawnerFortifier(plugin));
         // register all listeners
         listeners.forEach(SpeedrunListenerBase::register);
 
@@ -44,39 +49,37 @@ public class StandardSpeedrun extends Game {
 
     @Override
     public void startGame() {
-        runners.forEach(runner -> runner.clearScoreBoard());
-        plugin.getServer().broadcastMessage("Game starting soon!");
+        cancelTriviaBoards();
+        plugin.getServer().broadcastMessage("Game starting in 10 to 20 seconds!");
 
         // create teams
         if(0 < config.standardTeamSize ) {
             this.teams = teamBuilder.build(runners);
             plugin.getServer().broadcastMessage("Teams are as follows:");
             this.teams.forEach(team -> {
-                this.plugin.getServer().broadcastMessage(team.getTeamAsString() + " is ready to roll!");
+                this.plugin.getServer().broadcastMessage(team.getTeamAsString());
             });
             Helpers.tellPlayersTheirTeam(teams);
         }
         // set up the start of the game
 
         Random random = new Random();
-        int randomCountdown =  random.nextInt(11) + 14;
+        int randomCountdown =  random.nextInt(11) + 10;
         Timer timer = new Timer();
         TimerTask startupTask = new TimerTask() {
             @Override
             public void run() {
                 plugin.getServer().broadcastMessage("Game has started!");
                 startTimens = System.nanoTime();
-                runners.forEach(runner -> {
-                    runner.spigotPlayer.setAllowFlight(false);
-                    runner.spigotPlayer.setFlying(false);
-                    runner.spigotPlayer.setWalkSpeed(Helpers.walkSpeed);
-                    runner.spigotPlayer.setFlySpeed(Helpers.flySpeed);
-                }); // set walk speed back
                 isOn = true;
                 plugin.getServer().getWorlds().forEach(world -> {
                     world.setPVP(true);
                 });
+                runners.forEach(runner -> {
+                    runner.spigotPlayer.playSound(runner.spigotPlayer.getLocation(), Soundbank.getRandomGoatHorn(), 3.f, 1.f);
+                });
                 unregisterListener(BlockBreakPreventer.name);
+                unregisterListener(MovementPreventer.name);
             }
         };
         timer.schedule(startupTask, 1000 * randomCountdown);
@@ -93,38 +96,13 @@ public class StandardSpeedrun extends Game {
         if(this.isTeamGame())
             Helpers.sendResultsToPlayers(teams);
 
-        ArrayList<Document> gameData = new ArrayList<Document>();
-        ArrayList<Document> playerData = new ArrayList<Document>();
-        float averageRank = getAverageRank();
-        for (SpeedRunner runner : this.runners) // one gamedoc per runner
-        {
-            Document gameDoc = new Document();
-            gameDoc.append( "runnerid", runner.spigotPlayer.getUniqueId().toString() );
-            gameDoc.append("runnername", runner.name);
-            gameDoc.append("category", category);
-            gameDoc.append("team", runner.teamID);
-            gameDoc.append("time", runner.time);
-            gameDoc.append("score", calculateFinalScore(runner, averageRank));
-            gameDoc.append("kills", runner.stats.getKills());
-            gameDoc.append("deaths", runner.stats.getDeaths());
-            gameDoc.append("date", gameDate);
-            gameData.add(gameDoc);
-
-            playerData.add(runner.getUpdatedPlayerDocument());
-        }
-
-        plugin.uploadPlayerData(playerData);
-        plugin.uploadGameData(gameData);
-
+        plugin.uploadFinishedGameData();
         Map<Statistic, SpeedRunner> statsMap = statsHandler.calculateLeaders();
-        this.scoreBoardManager.createAndSetTriviaBoard(statsMap);
+        SpeedrunScoreBoardManager.createAndSetTriviaBoard(statsMap);
     }
 
-    public void registerScoreBoardManager() {
-        this.scoreBoardManager = new SpeedrunScoreBoardManager(plugin.getServer().getScoreboardManager());
-    }
-
-    private int calculateFinalScore(SpeedRunner runner, float averageRank)
+    @Override
+    public int calculateFinalScore(SpeedRunner runner, float averageRank)
     {
         int baseScore = runner.stats.getPoints();
         baseScore += StandardSpeedrunScoring.calculateDeathScore(runner.stats.getDeaths());
@@ -136,6 +114,13 @@ public class StandardSpeedrun extends Game {
         } else {
             baseScore += StandardSpeedrunScoring.getEyeOfEnderScore(runner);
             baseScore = (int) ((float) baseScore * StandardSpeedrunScoring.calculateEloBoost(averageRank, runner.rank.getCode()) );
+        }
+
+        if(runner.time < Double.POSITIVE_INFINITY)
+        {
+            double oneHour = 3600.d;
+            double ratio = oneHour / runner.time;
+            baseScore = (int) (baseScore * Math.max(1.d, ratio));
         }
 
         return baseScore;

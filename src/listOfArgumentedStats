@@ -1,0 +1,83 @@
+Statistic DAMAGE_DEALT requires no argument.
+Statistic DAMAGE_TAKEN requires no argument.
+Statistic DEATHS requires no argument.
+Statistic MOB_KILLS requires no argument.
+Statistic PLAYER_KILLS requires no argument.
+Statistic FISH_CAUGHT requires no argument.
+Statistic ANIMALS_BRED requires no argument.
+Statistic LEAVE_GAME requires no argument.
+Statistic JUMP requires no argument.
+Statistic DROP_COUNT requires no argument.
+Statistic DROP requires an argument of type ITEM
+Statistic PICKUP requires an argument of type ITEM
+Statistic PLAY_ONE_MINUTE requires no argument.
+Statistic TOTAL_WORLD_TIME requires no argument.
+Statistic WALK_ONE_CM requires no argument.
+Statistic WALK_ON_WATER_ONE_CM requires no argument.
+Statistic FALL_ONE_CM requires no argument.
+Statistic SNEAK_TIME requires no argument.
+Statistic CLIMB_ONE_CM requires no argument.
+Statistic FLY_ONE_CM requires no argument.
+Statistic WALK_UNDER_WATER_ONE_CM requires no argument.
+Statistic MINECART_ONE_CM requires no argument.
+Statistic BOAT_ONE_CM requires no argument.
+Statistic PIG_ONE_CM requires no argument.
+Statistic HORSE_ONE_CM requires no argument.
+Statistic SPRINT_ONE_CM requires no argument.
+Statistic CROUCH_ONE_CM requires no argument.
+Statistic AVIATE_ONE_CM requires no argument.
+Statistic MINE_BLOCK requires an argument of type BLOCK
+Statistic USE_ITEM requires an argument of type ITEM
+Statistic BREAK_ITEM requires an argument of type ITEM
+Statistic CRAFT_ITEM requires an argument of type ITEM
+Statistic KILL_ENTITY requires an argument of type ENTITY
+Statistic ENTITY_KILLED_BY requires an argument of type ENTITY
+Statistic TIME_SINCE_DEATH requires no argument.
+Statistic TALKED_TO_VILLAGER requires no argument.
+Statistic TRADED_WITH_VILLAGER requires no argument.
+Statistic CAKE_SLICES_EATEN requires no argument.
+Statistic CAULDRON_FILLED requires no argument.
+Statistic CAULDRON_USED requires no argument.
+Statistic ARMOR_CLEANED requires no argument.
+Statistic BANNER_CLEANED requires no argument.
+Statistic BREWINGSTAND_INTERACTION requires no argument.
+Statistic BEACON_INTERACTION requires no argument.
+Statistic DROPPER_INSPECTED requires no argument.
+Statistic HOPPER_INSPECTED requires no argument.
+Statistic DISPENSER_INSPECTED requires no argument.
+Statistic NOTEBLOCK_PLAYED requires no argument.
+Statistic NOTEBLOCK_TUNED requires no argument.
+Statistic FLOWER_POTTED requires no argument.
+Statistic TRAPPED_CHEST_TRIGGERED requires no argument.
+Statistic ENDERCHEST_OPENED requires no argument.
+Statistic ITEM_ENCHANTED requires no argument.
+Statistic RECORD_PLAYED requires no argument.
+Statistic FURNACE_INTERACTION requires no argument.
+Statistic CRAFTING_TABLE_INTERACTION requires no argument.
+Statistic CHEST_OPENED requires no argument.
+Statistic SLEEP_IN_BED requires no argument.
+Statistic SHULKER_BOX_OPENED requires no argument.
+Statistic TIME_SINCE_REST requires no argument.
+Statistic SWIM_ONE_CM requires no argument.
+Statistic DAMAGE_DEALT_ABSORBED requires no argument.
+Statistic DAMAGE_DEALT_RESISTED requires no argument.
+Statistic DAMAGE_BLOCKED_BY_SHIELD requires no argument.
+Statistic DAMAGE_ABSORBED requires no argument.
+Statistic DAMAGE_RESISTED requires no argument.
+Statistic CLEAN_SHULKER_BOX requires no argument.
+Statistic OPEN_BARREL requires no argument.
+Statistic INTERACT_WITH_BLAST_FURNACE requires no argument.
+Statistic INTERACT_WITH_SMOKER requires no argument.
+Statistic INTERACT_WITH_LECTERN requires no argument.
+Statistic INTERACT_WITH_CAMPFIRE requires no argument.
+Statistic INTERACT_WITH_CARTOGRAPHY_TABLE requires no argument.
+Statistic INTERACT_WITH_LOOM requires no argument.
+Statistic INTERACT_WITH_STONECUTTER requires no argument.
+Statistic BELL_RING requires no argument.
+Statistic RAID_TRIGGER requires no argument.
+Statistic RAID_WIN requires no argument.
+Statistic INTERACT_WITH_ANVIL requires no argument.
+Statistic INTERACT_WITH_GRINDSTONE requires no argument.
+Statistic TARGET_HIT requires no argument.
+Statistic INTERACT_WITH_SMITHING_TABLE requires no argument.
+Statistic STRIDER_ONE_CM requires no argument.

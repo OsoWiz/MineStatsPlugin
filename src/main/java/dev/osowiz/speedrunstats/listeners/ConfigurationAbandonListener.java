@@ -6,7 +6,7 @@ public class ConfigurationAbandonListener implements ConversationAbandonedListen
 
     @Override
     public void conversationAbandoned(org.bukkit.conversations.ConversationAbandonedEvent event) {
-        event.getContext().getForWhom().sendRawMessage("Conversation abandoned.");
+        event.getContext().getForWhom().sendRawMessage("Conversation ended, thank you.");
     }
 
 }

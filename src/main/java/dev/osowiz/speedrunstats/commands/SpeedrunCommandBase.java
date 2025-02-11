@@ -13,5 +13,4 @@ public abstract class SpeedrunCommandBase implements CommandExecutor {
     }
 
     public abstract boolean onCommand(CommandSender sender, Command command, String label, String[] args);
-
 }

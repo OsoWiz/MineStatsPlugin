@@ -1,8 +1,7 @@
 package dev.osowiz.speedrunstats.prompts;
 
-import dev.osowiz.speedrunstats.util.Game;
+import dev.osowiz.speedrunstats.games.Game;
 import dev.osowiz.speedrunstats.util.RafflePolicy;
-import dev.osowiz.speedrunstats.util.SpeedRunner;
 import org.bukkit.conversations.ConversationContext;
 import org.bukkit.conversations.FixedSetPrompt;
 import org.bukkit.conversations.Prompt;

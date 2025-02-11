@@ -1,7 +1,8 @@
 package dev.osowiz.speedrunstats.listeners;
 
 import dev.osowiz.speedrunstats.SpeedrunStats;
-import dev.osowiz.speedrunstats.gametypes.StandardSpeedrun;
+import dev.osowiz.speedrunstats.games.Game;
+import dev.osowiz.speedrunstats.games.StandardSpeedrun;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.world.WorldLoadEvent;
 
@@ -10,9 +11,9 @@ import org.bukkit.event.world.WorldLoadEvent;
  */
 public class WorldListener extends SpeedrunListenerBase {
 
-    private StandardSpeedrun game;
+    private final Game game;
 
-    public WorldListener(SpeedrunStats plugin, StandardSpeedrun game) {
+    public WorldListener(SpeedrunStats plugin, Game game) {
         super(plugin, WorldListener.class.getName());
         this.game = game;
     }
@@ -20,7 +21,6 @@ public class WorldListener extends SpeedrunListenerBase {
     @EventHandler
     public void onWorldLoad(WorldLoadEvent event) {
         game.registerScoreBoardManager();
-
         this.unregister();
     }
 

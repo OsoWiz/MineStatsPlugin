@@ -9,7 +9,7 @@ public class TeamBuilder {
     private FormationStrategy strategy; // is the strategy used to determine how many teams are created
     private RafflePolicy policy; // policy used to choose the teams
     private int teamCountSize; // team count or team size depending on the strategy.
-    private HashMap<UUID, Integer> playerChoices = new HashMap<UUID, Integer>();
+    private HashMap<SpeedRunner, Integer> playerChoices = new HashMap<SpeedRunner, Integer>();
     Random rand = new Random();
 
     /**
@@ -46,29 +46,18 @@ public class TeamBuilder {
      */
     public List<SpeedrunTeam> build(List<SpeedRunner> runners)
     {
-        List<SpeedrunTeam> teams = getEmptyTeams(runners.size());
-
-        switch(policy) {
-            case RANDOM:
-            {
-                return shuffleRandomly(runners, teams);
-            }
-            case MINIMIZE_RANK_DISPARITY: // currently pretty bad at minimizing rank disparity
-            {
-                return minimizeRankDisparity(runners, teams);
-            }
-            case PLAYER_CHOICE:
-            {
-                return shuffleByChoice(runners, teams);
-            }
-            default:
-            { // use the order in which the runners joined the server.
-                return groupByJoinOrder(runners, teams);
-            }
-        }
+        List<SpeedrunTeam> teams = new ArrayList<>();
+        return switch (policy) {
+            case RANDOM -> shuffleRandomly(runners);
+            case MINIMIZE_RANK_DISPARITY -> // currently pretty bad at minimizing rank disparity
+                    minimizeRankDisparity(runners);
+            case PLAYER_CHOICE -> shuffleByChoice(runners);
+            default -> // use the order in which the runners joined the server.
+                    groupByJoinOrder(runners);
+        };
     }
 
-    public void setPlayerChoice(UUID player, int teamID) {
+    public void setPlayerChoice(SpeedRunner player, int teamID) {
         playerChoices.put(player, teamID);
     }
 
@@ -102,47 +91,46 @@ public class TeamBuilder {
         return teams;
     }
 
-    private List<SpeedrunTeam> shuffleRandomly(List<SpeedRunner> runnersToShuffle, List<SpeedrunTeam> teams) {
-        Collections.shuffle(runnersToShuffle);
-        int teamIndex = 0;
-        for(SpeedRunner runner : runnersToShuffle) {
-            teams.get(teamIndex).addRunner(runner);
-            teamIndex = (++teamIndex) % teams.size();
+    private List<SpeedrunTeam> shuffleRandomly(List<SpeedRunner> runnersToShuffle) {
+        List<List<SpeedRunner>> teamedPlayers = new ArrayList<>();
+        switch (strategy)
+        {
+            case COUNT:
+                teamedPlayers = Shuffle.randomForCount(runnersToShuffle, this.teamCountSize);
+                break;
+            case SIZE:
+                teamedPlayers = Shuffle.randomForSize(runnersToShuffle, this.teamCountSize);
+                break;
+            case LOOSE:
+                this.teamCountSize = getTeamCountOnLooseStrategy(runnersToShuffle.size());
+                teamedPlayers = Shuffle.randomForCount(runnersToShuffle, this.teamCountSize);
+                break;
+            default:
+                teamedPlayers = Shuffle.randomForCount(runnersToShuffle, runnersToShuffle.size());
         }
-
-        return teams;
+        return makeTeams(teamedPlayers);
     }
 
-    private List<SpeedrunTeam> minimizeRankDisparity(List<SpeedRunner> runnersToShuffle, List<SpeedrunTeam> teams) {
-        Collections.sort(runnersToShuffle, Comparator.comparingInt(a -> a.rank.getCode())); // dummy implementation for now
-        int teamIndex = 0;
-        for (SpeedRunner runner : runnersToShuffle) {
-            teams.get(teamIndex).addRunner(runner);
-            teamIndex = (++teamIndex) % teams.size();
-        }
+    // TODO fix
+    private List<SpeedrunTeam> minimizeRankDisparity(List<SpeedRunner> runnersToShuffle) {
+        runnersToShuffle.sort(Comparator.comparingInt(a -> a.rank.getCode())); // dummy implementation for now
 
-        return teams;
+        List<List<SpeedRunner>> teamedPlayers = new ArrayList<>();
+        int numTeams = getTeamCount(runnersToShuffle.size());
+        teamedPlayers = Shuffle.randomForCount(runnersToShuffle, numTeams);
+
+        return makeTeams(teamedPlayers);
     }
 
-    private List<SpeedrunTeam> groupByJoinOrder(List<SpeedRunner> runnersToShuffle, List<SpeedrunTeam> teams) {
-        int teamIndex = 0;
-        for(SpeedRunner runner : runnersToShuffle) {
-            teams.get(teamIndex).addRunner(runner);
-            teamIndex = (++teamIndex) % teams.size();
-        }
-
-        return teams;
+    private List<SpeedrunTeam> groupByJoinOrder(List<SpeedRunner> runnersToShuffle) {
+        return makeTeams(Shuffle.rollDivide(runnersToShuffle, getTeamCount(runnersToShuffle.size())));
     }
 
-    private List<SpeedrunTeam> shuffleByChoice(List<SpeedRunner> runnersToShuffle, List<SpeedrunTeam> teams) {
-
-        for(SpeedRunner runner : runnersToShuffle) {
-            int teamChoice = playerChoices.getOrDefault(runner.spigotPlayer.getUniqueId(),
-                    getTeamIDForNoChoice(teams));
-            teams.get(teamChoice).addRunner(runner);
-        }
-        // dummy implementation for now
-        return teams;
+    private List<SpeedrunTeam> shuffleByChoice(List<SpeedRunner> runnersToShuffle)
+    {
+        int teamCount = getTeamCount(runnersToShuffle.size());
+        List<List<SpeedRunner>> runnerInTeams = Shuffle.byChoice(runnersToShuffle, teamCount, playerChoices);
+        return makeTeams(runnerInTeams);
     }
 
     private int getTeamCountOnLooseStrategy(int numRunners) {
@@ -157,13 +145,13 @@ public class TeamBuilder {
                 break;
             case PLAYER_CHOICE:
                 int numTeams = 1;
-                for(Map.Entry<UUID, Integer> entry : playerChoices.entrySet()) {
+                for(Map.Entry<SpeedRunner, Integer> entry : playerChoices.entrySet()) {
                     int suggestedTeamCount = entry.getValue() + 1;
                     if(numTeams < suggestedTeamCount) {
                         numTeams = suggestedTeamCount;
                     }
                 }
-                return numTeams < numRunners ? numTeams : numRunners;
+                return Math.min(numTeams, numRunners);
         }
         return numRunners;
     }
@@ -172,7 +160,7 @@ public class TeamBuilder {
         int teamID = rand.nextInt(teams.size());
         switch(strategy)
         {
-            case SIZE: // in case of size, we choose randomly among any team that has space in it.
+            case SIZE: // in case of size, we choose randomly among any team that has space in it. broken. TODO fix
                 List<SpeedrunTeam> teamsWithSpace = teams.stream().filter(team -> team.getRunners().size() < teamCountSize).toList();
                 int spaceTeamIndex = rand.nextInt(teamsWithSpace.size());
                 return teamsWithSpace.get(spaceTeamIndex).teamID;
@@ -187,9 +175,29 @@ public class TeamBuilder {
                 return teamID;
             default:
                 return teamID;
-
         }
+    }
 
+    private void setTeamColors(List<SpeedrunTeam> teams) {
+        List<ChatColor> colors = ChatColorList.getShuffledColors();
+        for(int i = 0; i < teams.size(); i++) {
+            teams.get(i).teamColor = colors.get(i);
+        }
+    }
+
+    private List<SpeedrunTeam> makeTeams(List<List<SpeedRunner>> groupedPlayers)
+    {
+        List<SpeedrunTeam> teams = new ArrayList<>();
+        List<ChatColor> colors = ChatColorList.getShuffledColors();
+        for(int i = 0; i < groupedPlayers.size(); i++)
+        {
+            SpeedrunTeam team = new SpeedrunTeam();
+            team.teamID = i;
+            team.setRunners(groupedPlayers.get(i));
+            team.teamColor = colors.get(i);
+            teams.add(team);
+        }
+        return teams;
     }
 
 

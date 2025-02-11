@@ -1,6 +1,7 @@
 package dev.osowiz.speedrunstats.prompts;
 
-import dev.osowiz.speedrunstats.util.Game;
+import dev.osowiz.speedrunstats.games.Game;
+import dev.osowiz.speedrunstats.util.SpeedRunner;
 import org.bukkit.ChatColor;
 import org.bukkit.conversations.ConversationContext;
 import org.bukkit.conversations.Prompt;
@@ -9,8 +10,8 @@ import org.bukkit.entity.Player;
 
 public class TeamJoinPrompt extends ValidatingPrompt {
 
-    private Game game;
-    private String question;
+    private final Game game;
+    private final String question;
     int numTeams;
     public TeamJoinPrompt(Game game, int numTeams)
     {
@@ -25,15 +26,18 @@ public class TeamJoinPrompt extends ValidatingPrompt {
     @Override
     public Prompt acceptValidatedInput(ConversationContext context, String input)
     {
-        game.broadcastMessage("Player " + ((Player) context.getForWhom()).getDisplayName() + " has joined a team " + input + "!");
         try {
             int choice = Integer.parseInt(input);
-            if(-1 < choice && choice < numTeams && context.getForWhom() instanceof Player)
+            if(-1 < choice && choice < numTeams && context.getForWhom() instanceof Player player)
             {
-                Player player = (Player) context.getForWhom();
+                game.broadcastMessage("Player " + ((Player) context.getForWhom()).getDisplayName() + " has joined a team " + input + "!");
                 player.sendMessage("You have joined team " + choice + "!");
                 // add player to team
-                game.teamBuilder.setPlayerChoice(player.getUniqueId(), choice);
+                SpeedRunner runner = game.getRunnerByID(player.getUniqueId());
+                if(runner != null)
+                {
+                    game.teamBuilder.setPlayerChoice(runner, choice);
+                }
             }
         } catch (NumberFormatException e)
         {

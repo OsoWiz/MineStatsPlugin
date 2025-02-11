@@ -7,13 +7,20 @@ import org.bukkit.command.CommandSender;
 
 public class StartCommand extends SpeedrunCommandBase {
 
+
+    public static final String name = "start";
+
     public StartCommand(SpeedrunStats plugin) {
         super(plugin);
     }
 
     @Override
     public boolean onCommand(CommandSender sender, Command command, String label, String[] args) {
-        sender.getServer().broadcastMessage("Arguments are: ");
+        if(!sender.isOp())
+        {
+            sender.sendMessage("You must be an operator to start the game");
+            return false;
+        }
         for(String arg : args)
         {
             sender.getServer().broadcastMessage(arg);

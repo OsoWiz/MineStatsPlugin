@@ -1,6 +1,6 @@
 package dev.osowiz.speedrunstats.prompts;
 
-import dev.osowiz.speedrunstats.util.Game;
+import dev.osowiz.speedrunstats.games.Game;
 import org.bukkit.conversations.ConversationContext;
 import org.bukkit.conversations.NumericPrompt;
 import org.bukkit.conversations.Prompt;

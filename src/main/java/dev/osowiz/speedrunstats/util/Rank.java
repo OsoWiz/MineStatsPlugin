@@ -15,14 +15,21 @@ public enum Rank {
     NETHERITE( 8, "Netherite", ChatColor.DARK_GRAY),
     ENCHANTED(9, "Enchanted", ChatColor.DARK_PURPLE);
 
+    public static class Formula { // this forces classloader to initialize these before enums.
+        public static double base = 1.01;
+        public static double exponentScale = 1.15;
+        public static double linearCoefficient = 0.00045;
+    }
     private final int code;
     private final String name;
     private final ChatColor color;
+    private final int requiredScore;
     private Rank(int code, String name, ChatColor color)
     {
         this.code = code;
         this.name = name;
         this.color = color;
+        this.requiredScore = calculateRequiredScore(code);
     }
 
     public int getCode() {
@@ -42,7 +49,12 @@ public enum Rank {
         return color + name + ChatColor.RESET;
     }
 
-    public static Rank getRank(int code)
+    public int getRequiredScore()
+    {
+        return requiredScore;
+    }
+
+    public static Rank fromCode(int code)
     {
         for(Rank rank : Rank.values())
         {
@@ -51,7 +63,7 @@ public enum Rank {
                 return rank;
             }
         }
-        return null;
+        return Rank.UNRANKED;
     }
 
     public static int maxRank()
@@ -60,7 +72,7 @@ public enum Rank {
     }
 
     /**
-     * Calculates the rank given the player score. (Usually weighted sum of past player scores.)
+     * Calculates the rank given the player score. Does not assume minimum threshold of played games.
      * @param score is usually the average of all the scores of the player.
      * @return
      */
@@ -69,11 +81,47 @@ public enum Rank {
         {
             return UNRANKED;
         }
-        double dScore = (double) score;
-        double base = dScore / 15000 + 1;
-        double dRank = Math.pow(base, dScore * 0.85) + dScore / 40 - 1;
-        int rankCode = (int) Math.min(dRank, maxRank());
-        return getRank(rankCode);
+        double drank = rankFunction((double) score);
+        int rankCode = (int) Math.min(drank, maxRank());
+        return fromCode(rankCode);
+    }
+
+    static public int calculateRequiredScore(Rank rank)
+    {
+        return calculateRequiredScore(rank.code);
+    }
+
+    static public int calculateRequiredScore(int rankCode)
+    {
+        // The rank function is transcendental and cannot be inverted. So the correct answer has to be searched for.
+        if(rankCode < 2)
+        { // for unranked and worst rank you don't need any score.
+            return 0;
+        }
+        double target = rankCode;
+        double guess = 100.0;
+        double diff = 1e6f;
+        for(int i = 0; i < 10; i++) {
+            double fx = rankFunction(guess);
+            double dx = rankDerivative(guess);
+            double step = ((target - fx) / dx);
+            guess = guess + step;
+            diff = target - fx;
+        } // while(Math.abs(diff) > 0.1f || target - (int) guess != 0);
+        if(rankFunction(Math.floor(guess)) < target)
+        { // there may be a possibility that the optimization gets stuck below the target.
+            guess += 1;
+        }
+
+        return (int) Math.floor(guess);
+    }
+
+    private static double rankFunction(double x){
+       return (float) (Math.pow(Formula.base, x * Formula.exponentScale) + Formula.linearCoefficient * x);
+    }
+
+    private static double rankDerivative(double x) {
+        return (float) (Math.log(Formula.base) * Formula.exponentScale * Math.pow(Formula.base, x) + Formula.linearCoefficient);
     }
 
 }

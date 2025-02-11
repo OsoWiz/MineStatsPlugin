@@ -5,6 +5,8 @@ import org.bukkit.ChatColor;
 import org.bukkit.entity.Player;
 import org.bukkit.scoreboard.*;
 
+import java.util.Collection;
+
 public class SpeedrunScoreBoard {
 
     private Scoreboard board;
@@ -14,6 +16,12 @@ public class SpeedrunScoreBoard {
         this.board = board;
         objective = board.registerNewObjective(SpeedrunStats.class.getName(), Criteria.DUMMY, displayName);
         objective.setDisplaySlot(DisplaySlot.SIDEBAR);
+    }
+
+    public SpeedrunScoreBoard(Scoreboard board, String displayName, DisplaySlot displaySlot) {
+        this.board = board;
+        objective = board.registerNewObjective(SpeedrunStats.class.getName(), Criteria.DUMMY, displayName);
+        objective.setDisplaySlot(displaySlot);
     }
 
     public void registerScore(String scoreKey, int slot, String prefix, int initialScore) {
@@ -91,6 +99,18 @@ public class SpeedrunScoreBoard {
             if(slot < 0)
                 break;
             objective.getScore(line).setScore(slot--);
+        }
+    }
+
+    public void setLines(Collection<String> lines)
+    {
+        int slot = 15;
+        for(String line : lines)
+        {
+            if(slot >= 0)
+            {
+                objective.getScore(line).setScore(slot--);
+            }
         }
     }
 

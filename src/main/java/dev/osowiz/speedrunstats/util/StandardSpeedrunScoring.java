@@ -8,6 +8,7 @@ public final class StandardSpeedrunScoring {
     static public final int MaxRank = 7;
 
     static public final int finalMission = 7;
+    static public final int noMission = -1;
 
     static public final int[] corePoints = new int[] {10, 10, 20, 20, 15, 25, 25, 25};
 
@@ -19,7 +20,7 @@ public final class StandardSpeedrunScoring {
             new ItemStack(Material.BREAD, 3)
     };
 
-    static public final String[] coreObjectives = new String[]{
+    static public final String[] coreObjectives = new String[] {
             "Find iron",
             "Get a bucket of lava",
             "Enter the Nether",
@@ -95,7 +96,6 @@ public final class StandardSpeedrunScoring {
             case "story/upgrade_tools":
             case "story/deflect_arrow":
             case "nether/return_to_sender":
-            case "nether/distract_piglin":
             case "adventure/kill_a_mob":
             case "adventure/shoot_arrow":
             case "adventure/spyglass_at_ghast": {
@@ -106,7 +106,8 @@ public final class StandardSpeedrunScoring {
             case "story/iron_tools":
             case "husbandry/fishy_business":
             case "adventure/ol_betsy":
-            case "adventure/sniper_duel": {
+            case "adventure/sniper_duel":
+            case "get_wither_skull": {
                 score = 3;
                 break;
             }
@@ -115,14 +116,16 @@ public final class StandardSpeedrunScoring {
             case "nether/ride_strider":
             case "adventure/voluntary_exile":
             case "adventure/trade":
-            case "husbandry/tame_an_animal": {
+            case "husbandry/tame_an_animal":
+            case "end/dragon_breath": {
                 score = 4;
                 break;
             }
             case "adventure/throw_trident":
             case "adventure/totem_of_undying":
             case "adventure/summon_iron_golem":
-            case "nether/charge_respawn_anchor": {
+            case "nether/charge_respawn_anchor":
+            case "nether/distract_piglin": {
                 score = 5;
                 break;
             }
@@ -136,16 +139,13 @@ public final class StandardSpeedrunScoring {
             case "story/cure_zombie_villager":
             case "nether/explore_nether":
             case "nether/find_bastion":
-            case "nether/loot_bastion": {
+            case "nether/loot_bastion":
+            case "story/enchant_item": {
                 score = 8;
                 break;
             }
             case "adventure/spyglass_at_dragon": {
                 score = 10;
-                break;
-            }
-            case "story/enchant_item": {
-                score = 12;
                 break;
             }
             case "adventure/hero_of_the_village": {
@@ -170,7 +170,7 @@ public final class StandardSpeedrunScoring {
                 break;
             }
             case "nether/netherite_armor": {
-                score = 60;
+                score = 50;
                 break;
             }
             case "nether/create_full_beacon": {

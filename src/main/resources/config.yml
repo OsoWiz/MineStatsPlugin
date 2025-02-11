@@ -1,0 +1,9 @@
+# database configuration
+operator_uid: "f6600c00-9a8e-4c95-9d02-f15179ccd5df"
+# game configuration
+gamemode: "standard"
+delete_worlds_on_startup: false
+prevent_movement_at_start: true
+standard_team_size: 2
+catchup_cooldown: 300
+loot_table: "standard"

@@ -1,6 +1,7 @@
 package dev.osowiz.speedrunstats.util;
 
-import org.bukkit.Statistic;
+import dev.osowiz.speedrunstats.games.Game;
+import dev.osowiz.speedrunstats.enums.Statistic;
 
 import java.util.*;
 import java.util.logging.Logger;
@@ -26,22 +27,20 @@ public class StatisticsHandler {
 
     public Map<Statistic, SpeedRunner> calculateLeaders()
     {
-        TreeMap<Statistic, SpeedRunner> map = new TreeMap();
-
+        TreeMap<Statistic, SpeedRunner> map = new TreeMap<>();
+        if(game.getRunners().isEmpty())
+            {
+            game.getLogger().info("No runners to calculate leaders for.");
+            return map;
+        }
         for(Statistic stat : statsToCalulate)
         {
-            SpeedRunner leader = null;
-            int max = 0;
-            for(SpeedRunner runner : game.runners)
+            SpeedRunner leader = game.getRunners().getFirst();
+            int max = stat.getValueForPlayer(leader.spigotPlayer);
+            for(SpeedRunner runner : game.getRunners().subList(1, game.getRunners().size()))
             {
-                int value = 0;
-                if(stat.isSubstatistic()) { // whether this statistic requires an additional argument
-                    value = getTypedStatistic(stat, runner);
-                } else {
-                    value = runner.spigotPlayer.getStatistic(stat);
-                }
-
-                if(max < value)
+                int value = stat.getValueForPlayer(runner.spigotPlayer);
+                if(max < value) // this does not handle ties very well. TODO FIX
                 {
                     max = value;
                     leader = runner;
@@ -50,39 +49,6 @@ public class StatisticsHandler {
             map.put(stat, leader);
         }
         return map;
-    }
-
-    /**
-     * Returns the value of a statistic that requires an additional argument.
-     * @param stat to query value for
-     * @param runner to query value for
-     * @return
-     */
-    private int getTypedStatistic(Statistic stat, SpeedRunner runner)
-    {
-        switch(stat)
-        {
-            default:
-                return 0;
-        }
-    }
-
-    /**
-     * Logs the statistics and their possible arguments.
-     * @param logger
-     */
-    public void logStats(Logger logger)
-    {
-        for(Statistic stat : Statistic.values())
-        {
-            if(stat.isSubstatistic())
-            {
-                Statistic.Type type = stat.getType();
-                logger.info("Statistic " + stat.toString() + " requires an argument of type " + type.toString());
-            } else {
-                logger.info("Statistic " + stat.toString() + " requires no argument.");
-            }
-        }
     }
 
 }

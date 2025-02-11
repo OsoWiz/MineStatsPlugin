@@ -23,6 +23,14 @@ commands:
     usage: /<command>
     aliases: [ conf, setup, konffi ]
   rank:
-    description: Tells the possible ranks to get and the rank of the player.
+    description: Tells the player their rank and what contributed to it.
     usage: /<command>
-    aliases: [ranks, getranks, rankit ]
+    aliases: [rankki, calculaterank ]
+  listranks:
+    description: Lists the ranks of the server.
+    usage: /<command>
+    aliases: [ranks, listaarankit, getranks]
+  leaders:
+    description: Lists top players on various statistics.
+    usage: /<command>
+    aliases: [leaderboard, topdogs, bossit]

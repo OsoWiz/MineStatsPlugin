@@ -1,8 +1,7 @@
 package dev.osowiz.speedrunstats.listeners;
 
 import dev.osowiz.speedrunstats.SpeedrunStats;
-import dev.osowiz.speedrunstats.gametypes.StandardSpeedrun;
-import dev.osowiz.speedrunstats.util.Game;
+import dev.osowiz.speedrunstats.games.StandardSpeedrun;
 import dev.osowiz.speedrunstats.util.SpeedRunner;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.Player;
@@ -21,10 +20,10 @@ public class StandardKillDeathListener extends SpeedrunListenerBase {
     @EventHandler
     public void onPlayerDeath(PlayerDeathEvent event) {
         Player player = event.getEntity();
-        SpeedRunner runner = game.getRunnerByName(player.getName());
+        SpeedRunner runner = game.getRunnerByID(player.getUniqueId());
         if(runner == null)
         {
-            plugin.getLogger().warning("Runner " + player.getName() + " not found in game.");
+            plugin.getLogger().warning("Runner " + player.getName() + " not found in the game for death event.");
             return;
         }
         runner.stats.addDeath();
@@ -34,10 +33,10 @@ public class StandardKillDeathListener extends SpeedrunListenerBase {
             return;
         }
 
-        SpeedRunner killerRunner = game.getRunnerByName(playerKiller.getName());
+        SpeedRunner killerRunner = game.getRunnerByID(playerKiller.getUniqueId());
         if(killerRunner == null)
         {
-            plugin.getLogger().warning("Runner " + playerKiller.getName() + " not found in game.");
+            plugin.getLogger().warning("The killing player " + playerKiller.getName() + " not found in game.");
             return;
         }
 
